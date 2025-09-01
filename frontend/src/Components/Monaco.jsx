@@ -21,6 +21,8 @@ const MonacoEditor = ({ userData }) => {
     connected,
     sendCursor,
     subscribeToRemoteCursor,
+    externalFilePath,
+    saveToDisk,
   } = useEditor();
 
   const editorRef = useRef(null);
