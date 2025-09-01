@@ -232,6 +232,19 @@ io.on('connection', (socket) => {
     }
   });
 
+  socket.on('cursor-update', ({ roomId = DEFAULT_ROOM_ID, offset }) => {
+    if (socket.roomId === roomId) {
+      socket.to(roomId).emit('cursor-update', { username: socket.username, offset });
+    }
+  });
+
+  socket.on('chat-message', ({ roomId = DEFAULT_ROOM_ID, message, username, timestamp }) => {
+    if (socket.roomId === roomId) {
+      const payload = { message, username: username || socket.username, timestamp: timestamp || new Date().toISOString() };
+      io.to(roomId).emit('chat-message', payload);
+    }
+  });
+
   socket.on('save-document', async ({ roomId = DEFAULT_ROOM_ID, content }) => {
     try {
       if (socket.roomId === roomId) {
