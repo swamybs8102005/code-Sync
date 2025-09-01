@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Copy, LogOut, Users, Wifi, WifiOff } from "lucide-react";
+import React, { useMemo, useState } from "react";
+import { Copy, LogOut, Users, Wifi, WifiOff, ChevronDown, ChevronRight } from "lucide-react";
 import { useEditor } from "../context/EditorContext";
 import { copyText } from "../utils/clipboard";
 
