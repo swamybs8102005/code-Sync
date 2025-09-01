@@ -29,13 +29,19 @@ const LocalFiles = () => {
   const openFolder = async () => {
     try {
       if (window.showDirectoryPicker) {
-        const dirHandle = await window.showDirectoryPicker()
-        const children = await buildTreeFromDirectoryHandle(dirHandle)
-        setTree({ name: dirHandle.name, path: dirHandle.name, kind: 'directory', handle: dirHandle, children })
-      } else {
-        fileInputRef.current?.click()
+        try {
+          const dirHandle = await window.showDirectoryPicker()
+          const children = await buildTreeFromDirectoryHandle(dirHandle)
+          setTree({ name: dirHandle.name, path: dirHandle.name, kind: 'directory', handle: dirHandle, children })
+          return
+        } catch (err) {
+          // Blocked by permissions policy or user canceled - fallback to input
+        }
       }
-    } catch (_) {}
+      fileInputRef.current?.click()
+    } catch (_) {
+      fileInputRef.current?.click()
+    }
   }
 
   const onFilesChosen = async (e) => {
