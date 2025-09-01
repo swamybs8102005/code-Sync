@@ -133,6 +133,7 @@ export const EditorProvider = ({ children }) => {
     saveDocument,
     updateContent,
     debouncedSave,
+    username,
     // presence
     subscribeToRemoteCursor,
     sendCursor,
