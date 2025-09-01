@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { Copy, LogOut, Users, Wifi, WifiOff, ChevronDown, ChevronRight } from "lucide-react";
+import { Copy, LogOut, Users, Wifi, WifiOff, ChevronDown, ChevronRight, History as HistoryIcon, MessageSquare } from "lucide-react";
 import { useEditor } from "../context/EditorContext";
 import { copyText } from "../utils/clipboard";
 
