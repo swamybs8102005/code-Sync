@@ -48,6 +48,7 @@ export const EditorProvider = ({ children }) => {
   const joinRoom = (roomId, username) => {
     if (socketRef.current && roomId) {
       setIsLoading(true)
+      setUsername(username || '')
       socketRef.current.emit('join', { roomId, username })
 
       socketRef.current.on('load-document', (initial) => {
