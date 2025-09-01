@@ -72,6 +72,41 @@ const MonacoEditor = ({ userData }) => {
     editorRef.current = editor;
     monacoRef.current = monaco;
     editor.focus();
+
+    editor.onDidChangeCursorPosition(() => {
+      try {
+        const model = editor.getModel();
+        if (!model) return;
+        const pos = editor.getPosition();
+        const offset = model.getOffsetAt(pos);
+        if (userData?.roomId) sendCursor(userData.roomId, offset);
+      } catch (_) {}
+    });
+
+    const unsubscribe = subscribeToRemoteCursor(({ username, offset }) => {
+      try {
+        const model = editor.getModel();
+        if (!model || typeof offset !== 'number') return;
+        const pos = model.getPositionAt(Math.max(0, Math.min(offset, model.getValueLength())));
+        const id = `rc-${username}`;
+        const decos = remoteDecorationsRef.current[id] || [];
+        const newDecos = editor.deltaDecorations(decos, [
+          {
+            range: new monaco.Range(pos.lineNumber, 1, pos.lineNumber, 1),
+            options: {
+              isWholeLine: true,
+              overviewRuler: { color: '#60a5fa', position: monaco.editor.OverviewRulerLane.Full },
+              glyphMarginHoverMessage: { value: `$(person) ${username}` },
+            },
+          },
+        ]);
+        remoteDecorationsRef.current[id] = newDecos;
+      } catch (_) {}
+    });
+
+    return () => {
+      unsubscribe && unsubscribe();
+    };
   };
 
   const API_URL = '';
