@@ -118,8 +118,11 @@ export const EditorProvider = ({ children }) => {
   }, [connected]);
 
   const sendChat = (roomId, username, message) => {
-    if (socketRef.current && connected && message) {
-      socketRef.current.emit('chat-message', { roomId, username, message, timestamp: new Date().toISOString() });
+    if (!message) return;
+    const payload = { roomId, username, message, timestamp: new Date().toISOString() };
+    setMessages((m) => [...m, payload]);
+    if (socketRef.current) {
+      try { socketRef.current.emit('chat-message', payload); } catch (_) {}
     }
   };
 
