@@ -168,6 +168,10 @@ const MonacoEditor = ({ userData }) => {
         </div>
 
         <div className="flex items-center gap-3">
+          <label className="flex items-center gap-1 text-xs text-gray-300">
+            <input type="checkbox" className="accent-blue-600" checked={formatOnSave} onChange={(e) => setFormatOnSave(e.target.checked)} />
+            Format on save
+          </label>
           <button
             onClick={runCode}
             disabled={isRunning}
