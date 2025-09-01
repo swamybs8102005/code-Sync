@@ -120,46 +120,56 @@ async function saveDocument(roomId, content) {
   memoryStore.set(roomId, { ...existing, content, updatedAt: new Date() });
 }
 
-// Track users per room
+// Track users per room: roomId -> Map<socketId, username>
 const roomUsers = new Map();
+function getUsernames(roomId) {
+  const map = roomUsers.get(roomId);
+  if (!map) return [];
+  return Array.from(map.values());
+}
 const DEFAULT_ROOM_ID = 'default';
 
 io.on('connection', (socket) => {
   console.log('👤 User connected:', socket.id);
 
-  socket.on('join', async (roomId = DEFAULT_ROOM_ID) => {
+  socket.on('join', async (payload) => {
     try {
+      const roomId = (typeof payload === 'string' ? payload : payload?.roomId) || DEFAULT_ROOM_ID;
+      const username = (typeof payload === 'object' && payload?.username) ? String(payload.username) : `User-${socket.id.slice(0, 4)}`;
+
       // Leave previous room if any
       if (socket.roomId) {
-        const prevRoom = roomUsers.get(socket.roomId) || new Set();
-        prevRoom.delete(socket.id);
-        if (prevRoom.size === 0) {
+        const prevMap = roomUsers.get(socket.roomId) || new Map();
+        prevMap.delete(socket.id);
+        if (prevMap.size === 0) {
           roomUsers.delete(socket.roomId);
         } else {
-          roomUsers.set(socket.roomId, prevRoom);
-          io.to(socket.roomId).emit('user-count', prevRoom.size);
+          roomUsers.set(socket.roomId, prevMap);
+          io.to(socket.roomId).emit('user-count', prevMap.size);
+          io.to(socket.roomId).emit('users', getUsernames(socket.roomId));
         }
       }
 
       // Join new room
       socket.join(roomId);
       socket.roomId = roomId;
+      socket.username = username;
 
       if (!roomUsers.has(roomId)) {
-        roomUsers.set(roomId, new Set());
+        roomUsers.set(roomId, new Map());
       }
-      roomUsers.get(roomId).add(socket.id);
+      roomUsers.get(roomId).set(socket.id, username);
 
       // Load or create document (DB or in-memory)
       const content = await loadDocument(roomId);
 
-      // Send document content and user count
+      // Send document content and users info
       socket.emit('load-document', content || '');
-      io.to(roomId).emit('user-count', roomUsers.get(roomId).size);
+      const currentMap = roomUsers.get(roomId);
+      io.to(roomId).emit('user-count', currentMap.size);
+      io.to(roomId).emit('users', getUsernames(roomId));
 
-      console.log(
-        `👥 User ${socket.id} joined room: ${roomId} (${roomUsers.get(roomId).size} users)`
-      );
+      console.log(`👥 User ${socket.id} (${username}) joined room: ${roomId} (${currentMap.size} users)`);
     } catch (error) {
       console.error('❌ Error joining room:', error);
       socket.emit('error', 'Failed to load document');
@@ -198,6 +208,7 @@ io.on('connection', (socket) => {
         } else {
           roomUsers.set(socket.roomId, room);
           io.to(socket.roomId).emit('user-count', room.size);
+          io.to(socket.roomId).emit('users', getUsernames(socket.roomId));
           console.log(`👥 Room ${socket.roomId} now has ${room.size} users`);
         }
       }
