@@ -8,6 +8,8 @@ const MonacoEditor = ({ userData }) => {
   const [theme, setTheme] = useState("vs-dark");
   const [fontSize, setFontSize] = useState(14);
   const [lastSaved, setLastSaved] = useState(null);
+  const [isRunning, setIsRunning] = useState(false);
+  const [runResult, setRunResult] = useState({ stdout: '', stderr: '', compile_output: '', status: null, time: null, memory: null });
 
   const {
     currentContent,
