@@ -26,8 +26,8 @@ const Chat = ({ userData }) => {
       <div ref={listRef} className="flex-1 overflow-auto px-4 py-3 space-y-2">
         {messages.map((m, i) => {
           const isMe = m.username === username;
-          const bubble = `max-w-[85%] w-fit px-3 py-2 text-sm shadow rounded-2xl leading-relaxed ${isMe ? 'bg-emerald-600 text-white rounded-br-md mr-4' : 'bg-slate-700 text-gray-100 rounded-bl-md ml-4'}`;
-          const timeCls = `text-[10px] mt-1 ${isMe ? 'text-emerald-200/80 text-right' : 'text-gray-400'}`;
+          const bubble = `max-w-[85%] w-fit px-2 py-1 text-sm leading-relaxed ${isMe ? 'text-white mr-4' : 'text-gray-100 ml-4'}`;
+          const timeCls = `text-[10px] mt-0.5 text-gray-400 ${isMe ? 'text-right' : ''}`;
           return (
             <div key={i} className={`flex ${isMe ? 'justify-end' : 'justify-start'} px-1`}>
               {!isMe && (
