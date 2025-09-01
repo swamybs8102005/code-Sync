@@ -44,11 +44,11 @@ export const EditorProvider = ({ children }) => {
     }
   }, [])
 
-  const joinRoom = (roomId) => {
+  const joinRoom = (roomId, username) => {
     if (socketRef.current && roomId) {
       setIsLoading(true)
-      socketRef.current.emit('join', roomId)
-      
+      socketRef.current.emit('join', { roomId, username })
+
       socketRef.current.on('load-document', (initial) => {
         setCurrentContent(initial || '')
         setIsLoading(false)
@@ -62,8 +62,12 @@ export const EditorProvider = ({ children }) => {
         })
       })
 
-      socketRef.current.on('user-count', (count) => {
-        // Update user count if needed
+      socketRef.current.on('user-count', (_count) => {
+        // count handled via users list length
+      })
+
+      socketRef.current.on('users', (list) => {
+        setUsers(Array.isArray(list) ? list : [])
       })
     }
   }
