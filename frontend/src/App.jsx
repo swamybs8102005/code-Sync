@@ -12,7 +12,7 @@ function AppContent() {
   const handleUserJoin = (userInfo) => {
     setUserData(userInfo)
     setIsUserJoined(true)
-    joinRoom(userInfo.roomId) // Join the room
+    joinRoom(userInfo.roomId, userInfo.username) // Join the room
   }
 
   const handleUserLeave = () => {
