@@ -8,9 +8,6 @@ const MonacoEditor = ({ userData, onToggleSidebar }) => {
   const [theme, setTheme] = useState("vs-dark");
   const [fontSize, setFontSize] = useState(14);
   const [lastSaved, setLastSaved] = useState(null);
-  const [isRunning, setIsRunning] = useState(false);
-  const [runResult, setRunResult] = useState({ stdout: '', stderr: '', compile_output: '', status: null, time: null, memory: null });
-  const [programInput, setProgramInput] = useState('');
 
   const {
     currentContent,
@@ -111,26 +108,6 @@ const MonacoEditor = ({ userData, onToggleSidebar }) => {
     };
   };
 
-  const API_URL = '';
-
-  const runCode = async () => {
-    setIsRunning(true);
-    setRunResult({ stdout: '', stderr: '', compile_output: '', status: null, time: null, memory: null });
-    try {
-      const res = await fetch(`/api/execute`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ language, code: currentContent, stdin: programInput }),
-      });
-      const data = await res.json();
-      setRunResult(data);
-    } catch (e) {
-      setRunResult({ stdout: '', stderr: String(e?.message || e), compile_output: '', status: { description: 'Error' } });
-    } finally {
-      setIsRunning(false);
-    }
-  };
-
   return (
     <div className="flex-1 h-full flex flex-col">
       {/* Top Bar */}
@@ -181,29 +158,10 @@ const MonacoEditor = ({ userData, onToggleSidebar }) => {
           {externalFilePath && (
             <button onClick={() => saveToDisk(currentContent)} className="px-3 py-1 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white text-sm cursor-pointer">Save to Disk</button>
           )}
-          <button
-            onClick={runCode}
-            disabled={isRunning}
-            className={`px-3 py-1 rounded-md text-white text-sm cursor-pointer ${isRunning ? 'bg-blue-900 opacity-70' : 'bg-blue-600 hover:bg-blue-700'}`}
-          >
-            {isRunning ? 'Running…' : 'Run'}
-          </button>
           <div className="text-xs text-gray-400">
             Saved: {lastSaved ? lastSaved.toLocaleTimeString() : "Never"}
           </div>
         </div>
-      </div>
-
-      {/* Program Input */}
-      <div className="bg-slate-900 border-b border-slate-700 p-3">
-        <label className="block text-xs text-gray-400 mb-2">Program Input (stdin)</label>
-        <textarea
-          rows={2}
-          className="w-full bg-slate-800 border border-slate-700 rounded-md text-white text-sm p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          placeholder="Provide input lines here..."
-          value={programInput}
-          onChange={(e) => setProgramInput(e.target.value)}
-        />
       </div>
 
       {/* Editor */}
@@ -237,19 +195,6 @@ const MonacoEditor = ({ userData, onToggleSidebar }) => {
         />
       </div>
 
-      {/* Output Panel */}
-      <div className="bg-slate-900 border-t border-slate-700 p-3 text-sm text-gray-200 min-h-[120px] max-h-56 overflow-auto">
-        {runResult?.status?.description && (
-          <div className="mb-2 text-xs text-gray-400">Status: {runResult.status.description} {runResult.time ? `(time: ${runResult.time}s)` : ''}</div>
-        )}
-        {runResult.compile_output ? (
-          <pre className="text-red-400 whitespace-pre-wrap">{runResult.compile_output}</pre>
-        ) : runResult.stderr ? (
-          <pre className="text-red-400 whitespace-pre-wrap">{runResult.stderr}</pre>
-        ) : (
-          <pre className="text-green-300 whitespace-pre-wrap">{runResult.stdout}</pre>
-        )}
-      </div>
     </div>
   );
 };
