@@ -51,14 +51,20 @@ export const EditorProvider = ({ children }) => {
     if (socketRef.current && roomId) {
       setIsLoading(true)
       setUsername(username || '')
-      socketRef.current.emit('join', { roomId, username })
 
-      socketRef.current.on('load-document', (initial) => {
+      const s = socketRef.current
+      // prevent duplicate listeners and register before join
+      s.off('load-document')
+      s.off('receive-changes')
+      s.off('user-count')
+      s.off('users')
+
+      s.on('load-document', (initial) => {
         setCurrentContent(initial || '')
         setIsLoading(false)
       })
 
-      socketRef.current.on('receive-changes', (delta) => {
+      s.on('receive-changes', (delta) => {
         setCurrentContent((prev) => {
           const start = prev.slice(0, delta.start)
           const end = prev.slice(delta.end)
@@ -66,13 +72,13 @@ export const EditorProvider = ({ children }) => {
         })
       })
 
-      socketRef.current.on('user-count', (_count) => {
-        // count handled via users list length
-      })
+      s.on('user-count', () => {})
 
-      socketRef.current.on('users', (list) => {
+      s.on('users', (list) => {
         setUsers(Array.isArray(list) ? list : [])
       })
+
+      s.emit('join', { roomId, username })
     }
   }
 
