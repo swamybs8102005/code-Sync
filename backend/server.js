@@ -99,6 +99,7 @@ async function loadDocument(roomId) {
   if (!memoryStore.has(roomId)) {
     memoryStore.set(roomId, {
       content: `// Welcome to room: ${roomId}\n// Start coding together!`,
+      versions: [],
       createdAt: new Date(),
       updatedAt: new Date(),
     });
