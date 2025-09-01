@@ -25,22 +25,12 @@ export const EditorProvider = ({ children }) => {
   const saveTimeoutRef = useRef(null)
 
   useEffect(() => {
-    const socket = io(SOCKET_URL, { transports: ['websocket'] })
+    const socket = io(SOCKET_URL, { path: '/socket.io' })
     socketRef.current = socket
 
-    socket.on('connect', () => {
-      setConnected(true)
-      console.log('Connected to server')
-    })
-
-    socket.on('disconnect', () => {
-      setConnected(false)
-      console.log('Disconnected from server')
-    })
-
-    socket.on('error', (error) => {
-      console.error('Socket error:', error)
-    })
+    socket.on('connect', () => setConnected(true))
+    socket.on('disconnect', () => setConnected(false))
+    socket.on('connect_error', () => setConnected(false))
 
     return () => {
       socket.disconnect()
