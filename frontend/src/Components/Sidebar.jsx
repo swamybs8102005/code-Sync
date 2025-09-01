@@ -3,10 +3,15 @@ import { Copy, LogOut, Users, Wifi, WifiOff, ChevronDown, ChevronRight, History 
 import { useEditor } from "../context/EditorContext";
 import { copyText } from "../utils/clipboard";
 
+import Chat from "./Chat";
+import VersionHistory from "./VersionHistory";
+
 const Sidebar = ({ userData, onLeave }) => {
   const { connected, users } = useEditor();
   const [copied, setCopied] = useState(false);
   const [showUsers, setShowUsers] = useState(false);
+  const [showChat, setShowChat] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
   const connectedUsers = useMemo(() => {
     const me = userData?.username;
     return (users || []).filter((u) => (me ? u !== me : true));
@@ -109,6 +114,44 @@ const Sidebar = ({ userData, onLeave }) => {
                 No other users connected
               </div>
             )}
+          </div>
+        )}
+      </div>
+
+      {/* Chat */}
+      <div className="px-4">
+        <button
+          onClick={() => setShowChat((s) => !s)}
+          className="w-full flex items-center justify-between bg-slate-700/60 hover:bg-slate-700 transition p-3 rounded-md text-left cursor-pointer"
+        >
+          <div className="flex items-center gap-2">
+            <MessageSquare size={18} className="text-blue-300" />
+            <span className="text-white font-semibold">Chat</span>
+          </div>
+          {showChat ? <ChevronDown size={18} className="text-gray-300" /> : <ChevronRight size={18} className="text-gray-300" />}
+        </button>
+        {showChat && (
+          <div className="mt-3">
+            <Chat userData={userData} />
+          </div>
+        )}
+      </div>
+
+      {/* History */}
+      <div className="px-4 mt-3">
+        <button
+          onClick={() => setShowHistory((s) => !s)}
+          className="w-full flex items-center justify-between bg-slate-700/60 hover:bg-slate-700 transition p-3 rounded-md text-left cursor-pointer"
+        >
+          <div className="flex items-center gap-2">
+            <HistoryIcon size={18} className="text-purple-300" />
+            <span className="text-white font-semibold">History</span>
+          </div>
+          {showHistory ? <ChevronDown size={18} className="text-gray-300" /> : <ChevronRight size={18} className="text-gray-300" />}
+        </button>
+        {showHistory && (
+          <div className="mt-3">
+            <VersionHistory roomId={userData?.roomId || 'default'} />
           </div>
         )}
       </div>
