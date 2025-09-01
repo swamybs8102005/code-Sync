@@ -101,42 +101,33 @@ const MonacoEditor = ({ userData }) => {
 
       {/* Editor */}
       <div className="flex-1">
-        {isLoading ? (
-          <div className="flex items-center justify-center h-full bg-slate-900">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-600 border-t-transparent mx-auto mb-4"></div>
-              <p className="text-gray-400">Loading collaborative editor...</p>
-            </div>
-          </div>
-        ) : (
-          <Editor
-            height="100%"
-            width="100%"
-            language={language}
-            value={currentContent}
-            onChange={handleEditorChange}
-            onMount={handleEditorDidMount}
-            theme={theme}
-            options={{
-              minimap: { enabled: false },
-              fontSize,
-              wordWrap: "on",
-              automaticLayout: true,
-              lineNumbers: "on",
-              cursorStyle: "line",
-              fontFamily: "JetBrains Mono, Fira Code, Consolas, monospace",
-              lineHeight: Math.round(fontSize * 1.5),
-              padding: { top: 20, bottom: 20 },
-              scrollbar: { vertical: "visible", horizontal: "visible" },
-              renderLineHighlight: "all",
-              bracketPairColorization: { enabled: true },
-              guides: { bracketPairs: true, indentation: true },
-              smoothScrolling: true,
-              cursorBlinking: "smooth",
-              folding: true,
-            }}
-          />
-        )}
+        <Editor
+          height="100%"
+          width="100%"
+          language={language}
+          value={currentContent}
+          onChange={handleEditorChange}
+          onMount={handleEditorDidMount}
+          theme={theme}
+          options={{
+            minimap: { enabled: false },
+            fontSize,
+            wordWrap: "on",
+            automaticLayout: true,
+            lineNumbers: "on",
+            cursorStyle: "line",
+            fontFamily: "JetBrains Mono, Fira Code, Consolas, monospace",
+            lineHeight: Math.round(fontSize * 1.5),
+            padding: { top: 20, bottom: 20 },
+            scrollbar: { vertical: "visible", horizontal: "visible" },
+            renderLineHighlight: "all",
+            bracketPairColorization: { enabled: true },
+            guides: { bracketPairs: true, indentation: true },
+            smoothScrolling: true,
+            cursorBlinking: "smooth",
+            folding: true,
+          }}
+        />
       </div>
     </div>
   );
