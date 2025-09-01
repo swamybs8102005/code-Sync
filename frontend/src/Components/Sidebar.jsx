@@ -1,19 +1,33 @@
-import React, { useState } from "react";
-import { Copy, LogOut, Users, Wifi, WifiOff } from "lucide-react";
+import React, { useMemo, useState } from "react";
+import { Copy, LogOut, Users, Wifi, WifiOff, ChevronDown, ChevronRight, History as HistoryIcon, MessageSquare, FolderOpen, ChevronsLeft } from "lucide-react";
 import { useEditor } from "../context/EditorContext";
+import { copyText } from "../utils/clipboard";
 
-const Sidebar = ({ userData, onLeave }) => {
-  const { connected, users: connectedUsers } = useEditor();
+import Chat from "./Chat";
+import VersionHistory from "./VersionHistory";
+import LocalFiles from "./LocalFiles";
+
+const Sidebar = ({ userData, onLeave, onCollapse }) => {
+  const { connected, users } = useEditor();
   const [copied, setCopied] = useState(false);
+  const [activePanel, setActivePanel] = useState(null);
+  const connectedUsers = useMemo(() => {
+    const me = userData?.username;
+    return (users || []).filter((u) => (me ? u !== me : true));
+  }, [users, userData?.username]);
 
   const handleCopyRoomId = async () => {
-    try {
-      await navigator.clipboard.writeText(userData?.roomId || "default");
+    const toCopy = userData?.roomId || "default";
+    const ok = await copyText(toCopy);
+    if (ok) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
-      console.error("Failed to copy room ID:", err);
+      return;
     }
+    try {
+      // final fallback: show prompt so user can copy manually
+      window.prompt("Copy room ID", toCopy);
+    } catch (_) {}
   };
 
   const handleLeave = () => {
@@ -26,6 +40,14 @@ const Sidebar = ({ userData, onLeave }) => {
     <div className="w-64 h-full flex-shrink-0 bg-slate-800 flex flex-col justify-between shadow-lg">
       {/* Room Info */}
       <div className="p-4 border-b border-slate-700">
+        <div className="flex items-center justify-between mb-2">
+          <div className="text-white font-semibold">Room</div>
+          {onCollapse && (
+            <button onClick={onCollapse} className="text-gray-300 hover:text-white cursor-pointer" title="Hide panels">
+              <ChevronsLeft size={18} />
+            </button>
+          )}
+        </div>
         <div className="bg-slate-700 p-3 rounded-lg">
           <h3 className="text-white text-sm font-medium mb-2">Room ID</h3>
           <p className="text-green-400 font-mono text-xs break-all">
@@ -48,43 +70,55 @@ const Sidebar = ({ userData, onLeave }) => {
         </div>
       </div>
 
-      {/* Connected Users */}
+      {/* Explorer only */}
       <div className="flex-1 p-4 overflow-y-auto">
-        <div className="flex items-center gap-2 mb-4">
-          <Users size={20} className="text-blue-400" />
-          <h2 className="text-white text-lg font-semibold">Connected Users</h2>
-          <span className="bg-blue-600 text-white text-xs px-2 py-1 rounded-full">
-            {connectedUsers.length + 1}
-          </span>
-        </div>
+        <LocalFiles />
+      </div>
 
-        {/* Current User */}
-        <div className="flex items-center gap-3 p-3 rounded-lg bg-blue-600/20 border border-blue-500/30 mb-2">
-          <div className="w-8 h-8 flex items-center justify-center rounded-full text-white font-bold bg-blue-600">
-            {userData?.username?.[0]?.toUpperCase() || "U"}
-          </div>
-          <span className="text-white flex-1">
-            {userData?.username || "User"}
-          </span>
-          <span className="text-blue-400 text-xs">(You)</span>
+      {/* Bottom icon panels */}
+      <div className="px-4">
+        <div className="flex items-center justify-around py-2 bg-slate-700/60 rounded-md">
+          <button onClick={() => setActivePanel(activePanel === 'users' ? null : 'users')} className="text-gray-200 hover:text-white cursor-pointer" title="Users">
+            <Users size={18} />
+          </button>
+          <button onClick={() => setActivePanel(activePanel === 'chat' ? null : 'chat')} className="text-gray-200 hover:text-white cursor-pointer" title="Chat">
+            <MessageSquare size={18} />
+          </button>
+          <button onClick={() => setActivePanel(activePanel === 'history' ? null : 'history')} className="text-gray-200 hover:text-white cursor-pointer" title="History">
+            <HistoryIcon size={18} />
+          </button>
         </div>
-
-        {/* Other Users */}
-        {connectedUsers.length > 0 ? (
-          connectedUsers.map((user, idx) => (
-            <div
-              key={idx}
-              className="flex items-center gap-3 p-3 rounded-lg bg-slate-700 hover:bg-slate-600 transition"
-            >
-              <div className="w-8 h-8 flex items-center justify-center rounded-full text-white font-bold bg-slate-600">
-                {user[0]?.toUpperCase() || "U"}
+        {activePanel === 'users' && (
+          <div className="mt-3">
+            <div className="flex items-center gap-3 p-3 rounded-lg bg-blue-600/20 border border-blue-500/30 mb-2">
+              <div className="w-8 h-8 flex items-center justify-center rounded-full text-white font-bold bg-blue-600">
+                {userData?.username?.[0]?.toUpperCase() || 'U'}
               </div>
-              <span className="text-white flex-1">{user}</span>
+              <span className="text-white flex-1">{userData?.username || 'User'}</span>
+              <span className="text-blue-400 text-xs">(You)</span>
             </div>
-          ))
-        ) : (
-          <div className="text-center py-6 text-gray-400 text-sm">
-            No other users connected
+            {connectedUsers.length > 0 ? (
+              connectedUsers.map((user, idx) => (
+                <div key={idx} className="flex items-center gap-3 p-3 rounded-lg bg-slate-700 hover:bg-slate-600 transition">
+                  <div className="w-8 h-8 flex items-center justify-center rounded-full text-white font-bold bg-slate-600">
+                    {user[0]?.toUpperCase() || 'U'}
+                  </div>
+                  <span className="text-white flex-1">{user}</span>
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-4 text-gray-400 text-sm">No other users connected</div>
+            )}
+          </div>
+        )}
+        {activePanel === 'chat' && (
+          <div className="mt-3">
+            <Chat userData={userData} />
+          </div>
+        )}
+        {activePanel === 'history' && (
+          <div className="mt-3">
+            <VersionHistory roomId={userData?.roomId || 'default'} />
           </div>
         )}
       </div>

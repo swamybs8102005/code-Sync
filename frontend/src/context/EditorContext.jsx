@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react'
 import { io } from 'socket.io-client'
 
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000'
+const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || ''
 
 const EditorContext = createContext()
 
@@ -18,43 +18,43 @@ export const EditorProvider = ({ children }) => {
   const [users, setUsers] = useState([])
   const [currentContent, setCurrentContent] = useState('')
   const [isLoading, setIsLoading] = useState(true)
+  const [username, setUsername] = useState('')
+  const [externalFileHandle, setExternalFileHandle] = useState(null)
+  const [externalFilePath, setExternalFilePath] = useState('')
   const socketRef = useRef(null)
   const saveTimeoutRef = useRef(null)
 
   useEffect(() => {
-    const socket = io(SOCKET_URL, { transports: ['websocket'] })
+    const socket = io(SOCKET_URL, { path: '/socket.io' })
     socketRef.current = socket
 
-    socket.on('connect', () => {
-      setConnected(true)
-      console.log('Connected to server')
-    })
-
-    socket.on('disconnect', () => {
-      setConnected(false)
-      console.log('Disconnected from server')
-    })
-
-    socket.on('error', (error) => {
-      console.error('Socket error:', error)
-    })
+    socket.on('connect', () => setConnected(true))
+    socket.on('disconnect', () => setConnected(false))
+    socket.on('connect_error', () => setConnected(false))
 
     return () => {
       socket.disconnect()
     }
   }, [])
 
-  const joinRoom = (roomId) => {
+  const joinRoom = (roomId, username) => {
     if (socketRef.current && roomId) {
       setIsLoading(true)
-      socketRef.current.emit('join', roomId)
-      
-      socketRef.current.on('load-document', (initial) => {
+      setUsername(username || '')
+
+      const s = socketRef.current
+      // prevent duplicate listeners and register before join
+      s.off('load-document')
+      s.off('receive-changes')
+      s.off('user-count')
+      s.off('users')
+
+      s.on('load-document', (initial) => {
         setCurrentContent(initial || '')
         setIsLoading(false)
       })
 
-      socketRef.current.on('receive-changes', (delta) => {
+      s.on('receive-changes', (delta) => {
         setCurrentContent((prev) => {
           const start = prev.slice(0, delta.start)
           const end = prev.slice(delta.end)
@@ -62,9 +62,13 @@ export const EditorProvider = ({ children }) => {
         })
       })
 
-      socketRef.current.on('user-count', (count) => {
-        // Update user count if needed
+      s.on('user-count', () => {})
+
+      s.on('users', (list) => {
+        setUsers(Array.isArray(list) ? list : [])
       })
+
+      s.emit('join', { roomId, username })
     }
   }
 
@@ -91,6 +95,55 @@ export const EditorProvider = ({ children }) => {
     }, 1000)
   }
 
+  const subscribeToRemoteCursor = (handler) => {
+    if (!socketRef.current) return () => {};
+    socketRef.current.on('cursor-update', handler);
+    return () => socketRef.current?.off('cursor-update', handler);
+  };
+
+  const sendCursor = (roomId, offset) => {
+    if (socketRef.current && connected) {
+      socketRef.current.emit('cursor-update', { roomId, offset });
+    }
+  };
+
+  const [messages, setMessages] = useState([]);
+  useEffect(() => {
+    const s = socketRef.current;
+    if (!s) return;
+    const handler = (msg) => setMessages((m) => [...m, msg]);
+    s.off('chat-message', handler);
+    s.on('chat-message', handler);
+    return () => s.off('chat-message', handler);
+  }, [connected]);
+
+  const sendChat = (roomId, username, message) => {
+    if (!message) return;
+    const payload = { roomId, username, message, timestamp: new Date().toISOString() };
+    setMessages((m) => [...m, payload]);
+    if (socketRef.current) {
+      try { socketRef.current.emit('chat-message', payload); } catch (_) {}
+    }
+  };
+
+  const setExternalFile = (handle, path) => {
+    setExternalFileHandle(handle || null)
+    setExternalFilePath(path || '')
+  }
+
+  const saveToDisk = async (content) => {
+    try {
+      if (!externalFileHandle?.createWritable) return false
+      const writable = await externalFileHandle.createWritable()
+      await writable.write(content ?? currentContent)
+      await writable.close()
+      return true
+    } catch (e) {
+      console.error('Failed to save to disk:', e)
+      return false
+    }
+  }
+
   const value = {
     connected,
     users,
@@ -100,7 +153,19 @@ export const EditorProvider = ({ children }) => {
     sendChanges,
     saveDocument,
     updateContent,
-    debouncedSave
+    debouncedSave,
+    username,
+    // presence
+    subscribeToRemoteCursor,
+    sendCursor,
+    // chat
+    messages,
+    sendChat,
+    // external file
+    externalFileHandle,
+    externalFilePath,
+    setExternalFile,
+    saveToDisk,
   }
 
   return (

@@ -1,18 +1,19 @@
 import React, { useState } from 'react'
-import UserJoin from './components/UserJoin'
-import Sidebar from './components/Sidebar'
-import MonacoEditor from './components/Monaco'
+import UserJoin from './Components/UserJoin'
+import Sidebar from './Components/Sidebar'
+import MonacoEditor from './Components/Monaco'
 import { EditorProvider, useEditor } from './context/EditorContext'
 
 function AppContent() {
   const [isUserJoined, setIsUserJoined] = useState(false)
   const [userData, setUserData] = useState(null)
   const { joinRoom } = useEditor()
+  const [showSidebar, setShowSidebar] = useState(true)
 
   const handleUserJoin = (userInfo) => {
     setUserData(userInfo)
     setIsUserJoined(true)
-    joinRoom(userInfo.roomId) // Join the room
+    joinRoom(userInfo.roomId, userInfo.username) // Join the room
   }
 
   const handleUserLeave = () => {
@@ -26,8 +27,8 @@ function AppContent() {
         <UserJoin onJoin={handleUserJoin} />
       ) : (
         <div className="h-screen w-screen flex flex-row bg-slate-900 overflow-hidden ">
-          <Sidebar userData={userData} onLeave={handleUserLeave} />
-          <MonacoEditor userData={userData} />
+          {showSidebar && <Sidebar userData={userData} onLeave={handleUserLeave} onCollapse={() => setShowSidebar(false)} />}
+          <MonacoEditor userData={userData} onToggleSidebar={() => setShowSidebar((s) => !s)} />
         </div>
       )}
     </>
