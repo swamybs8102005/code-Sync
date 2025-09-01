@@ -19,6 +19,8 @@ export const EditorProvider = ({ children }) => {
   const [currentContent, setCurrentContent] = useState('')
   const [isLoading, setIsLoading] = useState(true)
   const [username, setUsername] = useState('')
+  const [externalFileHandle, setExternalFileHandle] = useState(null)
+  const [externalFilePath, setExternalFilePath] = useState('')
   const socketRef = useRef(null)
   const saveTimeoutRef = useRef(null)
 
@@ -123,6 +125,24 @@ export const EditorProvider = ({ children }) => {
     }
   };
 
+  const setExternalFile = (handle, path) => {
+    setExternalFileHandle(handle || null)
+    setExternalFilePath(path || '')
+  }
+
+  const saveToDisk = async (content) => {
+    try {
+      if (!externalFileHandle?.createWritable) return false
+      const writable = await externalFileHandle.createWritable()
+      await writable.write(content ?? currentContent)
+      await writable.close()
+      return true
+    } catch (e) {
+      console.error('Failed to save to disk:', e)
+      return false
+    }
+  }
+
   const value = {
     connected,
     users,
@@ -140,6 +160,11 @@ export const EditorProvider = ({ children }) => {
     // chat
     messages,
     sendChat,
+    // external file
+    externalFileHandle,
+    externalFilePath,
+    setExternalFile,
+    saveToDisk,
   }
 
   return (
