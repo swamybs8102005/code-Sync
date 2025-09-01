@@ -109,16 +109,20 @@ async function loadDocument(roomId) {
 
 async function saveDocument(roomId, content) {
   if (dbConnected) {
-    await Document.findOneAndUpdate(
-      { roomId },
-      { content },
-      { new: true, upsert: true }
-    );
+    const doc = await Document.findOne({ roomId });
+    if (!doc) {
+      await Document.create({ roomId, content, versions: [{ content }] });
+    } else {
+      doc.versions = [...(doc.versions || []), { content }].slice(-20);
+      doc.content = content;
+      await doc.save();
+    }
     return;
   }
   // Fallback
-  const existing = memoryStore.get(roomId) || { createdAt: new Date() };
-  memoryStore.set(roomId, { ...existing, content, updatedAt: new Date() });
+  const existing = memoryStore.get(roomId) || { createdAt: new Date(), versions: [] };
+  const versions = [...(existing.versions || []), { content, createdAt: new Date() }].slice(-20);
+  memoryStore.set(roomId, { ...existing, versions, content, updatedAt: new Date() });
 }
 
 // Track users per room: roomId -> Map<socketId, username>
