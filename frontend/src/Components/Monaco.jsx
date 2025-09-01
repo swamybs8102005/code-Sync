@@ -25,6 +25,9 @@ const MonacoEditor = ({ userData }) => {
 
   const editorRef = useRef(null);
   const monacoRef = useRef(null);
+  const remoteDecorationsRef = useRef({});
+  const isFormattingRef = useRef(false);
+  const [formatOnSave, setFormatOnSave] = useState(true);
 
   const languages = [
     { id: "javascript", name: "JavaScript", icon: "⚡", ext: ".js" },
