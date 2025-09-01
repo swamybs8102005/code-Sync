@@ -73,112 +73,53 @@ const Sidebar = ({ userData, onLeave, onCollapse }) => {
         </div>
       </div>
 
-      {/* Connected Users */}
+      {/* Explorer only */}
       <div className="flex-1 p-4 overflow-y-auto">
-        <button
-          onClick={() => setShowUsers((s) => !s)}
-          className="w-full flex items-center justify-between bg-slate-700/60 hover:bg-slate-700 transition p-3 rounded-md text-left cursor-pointer"
-        >
-          <div className="flex items-center gap-2">
-            <Users size={20} className="text-blue-400" />
-            <h2 className="text-white text-lg font-semibold">Connected Users</h2>
-            <span className="bg-blue-600 text-white text-xs px-2 py-1 rounded-full">
-              {connectedUsers.length + 1}
-            </span>
-          </div>
-          {showUsers ? (
-            <ChevronDown size={18} className="text-gray-300" />
-          ) : (
-            <ChevronRight size={18} className="text-gray-300" />
-          )}
-        </button>
+        <LocalFiles />
+      </div>
 
-        {showUsers && (
+      {/* Bottom icon panels */}
+      <div className="px-4">
+        <div className="flex items-center justify-around py-2 bg-slate-700/60 rounded-md">
+          <button onClick={() => setActivePanel(activePanel === 'users' ? null : 'users')} className="text-gray-200 hover:text-white cursor-pointer" title="Users">
+            <Users size={18} />
+          </button>
+          <button onClick={() => setActivePanel(activePanel === 'chat' ? null : 'chat')} className="text-gray-200 hover:text-white cursor-pointer" title="Chat">
+            <MessageSquare size={18} />
+          </button>
+          <button onClick={() => setActivePanel(activePanel === 'history' ? null : 'history')} className="text-gray-200 hover:text-white cursor-pointer" title="History">
+            <HistoryIcon size={18} />
+          </button>
+        </div>
+        {activePanel === 'users' && (
           <div className="mt-3">
-            {/* Current User */}
             <div className="flex items-center gap-3 p-3 rounded-lg bg-blue-600/20 border border-blue-500/30 mb-2">
               <div className="w-8 h-8 flex items-center justify-center rounded-full text-white font-bold bg-blue-600">
-                {userData?.username?.[0]?.toUpperCase() || "U"}
+                {userData?.username?.[0]?.toUpperCase() || 'U'}
               </div>
-              <span className="text-white flex-1">
-                {userData?.username || "User"}
-              </span>
+              <span className="text-white flex-1">{userData?.username || 'User'}</span>
               <span className="text-blue-400 text-xs">(You)</span>
             </div>
-
-            {/* Other Users */}
             {connectedUsers.length > 0 ? (
               connectedUsers.map((user, idx) => (
-                <div
-                  key={idx}
-                  className="flex items-center gap-3 p-3 rounded-lg bg-slate-700 hover:bg-slate-600 transition"
-                >
+                <div key={idx} className="flex items-center gap-3 p-3 rounded-lg bg-slate-700 hover:bg-slate-600 transition">
                   <div className="w-8 h-8 flex items-center justify-center rounded-full text-white font-bold bg-slate-600">
-                    {user[0]?.toUpperCase() || "U"}
+                    {user[0]?.toUpperCase() || 'U'}
                   </div>
                   <span className="text-white flex-1">{user}</span>
                 </div>
               ))
             ) : (
-              <div className="text-center py-6 text-gray-400 text-sm">
-                No other users connected
-              </div>
+              <div className="text-center py-4 text-gray-400 text-sm">No other users connected</div>
             )}
           </div>
         )}
-      </div>
-
-      {/* Local Files */}
-      <div className="px-4">
-        <button
-          onClick={() => setShowLocal((s) => !s)}
-          className="w-full flex items-center justify-between bg-slate-700/60 hover:bg-slate-700 transition p-3 rounded-md text-left cursor-pointer"
-        >
-          <div className="flex items-center gap-2">
-            <FolderOpen size={18} className="text-yellow-400" />
-            <span className="text-white font-semibold">Local Files</span>
-          </div>
-          {showLocal ? <ChevronDown size={18} className="text-gray-300" /> : <ChevronRight size={18} className="text-gray-300" />}
-        </button>
-        {showLocal && (
-          <div className="mt-3">
-            <LocalFiles />
-          </div>
-        )}
-      </div>
-
-      {/* Chat */}
-      <div className="px-4 mt-3">
-        <button
-          onClick={() => setShowChat((s) => !s)}
-          className="w-full flex items-center justify-between bg-slate-700/60 hover:bg-slate-700 transition p-3 rounded-md text-left cursor-pointer"
-        >
-          <div className="flex items-center gap-2">
-            <MessageSquare size={18} className="text-blue-300" />
-            <span className="text-white font-semibold">Chat</span>
-          </div>
-          {showChat ? <ChevronDown size={18} className="text-gray-300" /> : <ChevronRight size={18} className="text-gray-300" />}
-        </button>
-        {showChat && (
+        {activePanel === 'chat' && (
           <div className="mt-3">
             <Chat userData={userData} />
           </div>
         )}
-      </div>
-
-      {/* History */}
-      <div className="px-4 mt-3">
-        <button
-          onClick={() => setShowHistory((s) => !s)}
-          className="w-full flex items-center justify-between bg-slate-700/60 hover:bg-slate-700 transition p-3 rounded-md text-left cursor-pointer"
-        >
-          <div className="flex items-center gap-2">
-            <HistoryIcon size={18} className="text-purple-300" />
-            <span className="text-white font-semibold">History</span>
-          </div>
-          {showHistory ? <ChevronDown size={18} className="text-gray-300" /> : <ChevronRight size={18} className="text-gray-300" />}
-        </button>
-        {showHistory && (
+        {activePanel === 'history' && (
           <div className="mt-3">
             <VersionHistory roomId={userData?.roomId || 'default'} />
           </div>
