@@ -8,6 +8,7 @@ function AppContent() {
   const [isUserJoined, setIsUserJoined] = useState(false)
   const [userData, setUserData] = useState(null)
   const { joinRoom } = useEditor()
+  const [showSidebar, setShowSidebar] = useState(true)
 
   const handleUserJoin = (userInfo) => {
     setUserData(userInfo)
@@ -26,8 +27,8 @@ function AppContent() {
         <UserJoin onJoin={handleUserJoin} />
       ) : (
         <div className="h-screen w-screen flex flex-row bg-slate-900 overflow-hidden ">
-          <Sidebar userData={userData} onLeave={handleUserLeave} />
-          <MonacoEditor userData={userData} />
+          {showSidebar && <Sidebar userData={userData} onLeave={handleUserLeave} onCollapse={() => setShowSidebar(false)} />}
+          <MonacoEditor userData={userData} onToggleSidebar={() => setShowSidebar((s) => !s)} />
         </div>
       )}
     </>
