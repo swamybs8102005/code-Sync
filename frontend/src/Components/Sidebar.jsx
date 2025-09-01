@@ -43,6 +43,12 @@ const Sidebar = ({ userData, onLeave }) => {
     <div className="w-64 h-full flex-shrink-0 bg-slate-800 flex flex-col justify-between shadow-lg">
       {/* Room Info */}
       <div className="p-4 border-b border-slate-700">
+        <div className="flex items-center justify-between mb-2">
+          <div className="text-white font-semibold">Room</div>
+          {typeof onLeave === 'function' && (
+            <button onClick={() => (window.togglePanels?.() || null)} className="text-xs text-gray-300 hover:text-white hidden"></button>
+          )}
+        </div>
         <div className="bg-slate-700 p-3 rounded-lg">
           <h3 className="text-white text-sm font-medium mb-2">Room ID</h3>
           <p className="text-green-400 font-mono text-xs break-all">
