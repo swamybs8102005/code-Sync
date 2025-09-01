@@ -58,6 +58,26 @@ const MonacoEditor = ({ userData }) => {
     editor.focus();
   };
 
+  const API_URL = import.meta.env.VITE_API_URL || import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000';
+
+  const runCode = async () => {
+    setIsRunning(true);
+    setRunResult({ stdout: '', stderr: '', compile_output: '', status: null, time: null, memory: null });
+    try {
+      const res = await fetch(`${API_URL}/api/execute`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ language, code: currentContent, stdin: '' }),
+      });
+      const data = await res.json();
+      setRunResult(data);
+    } catch (e) {
+      setRunResult({ stdout: '', stderr: String(e?.message || e), compile_output: '', status: { description: 'Error' } });
+    } finally {
+      setIsRunning(false);
+    }
+  };
+
   return (
     <div className="flex-1 h-full flex flex-col">
       {/* Top Bar */}
