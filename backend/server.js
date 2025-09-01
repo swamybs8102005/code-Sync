@@ -134,6 +134,50 @@ function getUsernames(roomId) {
 }
 const DEFAULT_ROOM_ID = 'default';
 
+// History endpoints
+app.get('/api/history/:roomId', async (req, res) => {
+  const { roomId } = req.params;
+  try {
+    if (dbConnected) {
+      const doc = await Document.findOne({ roomId });
+      const versions = (doc?.versions || []).map((v, idx) => ({ index: idx, createdAt: v.createdAt, size: v.content.length }));
+      return res.json({ versions });
+    }
+    const entry = memoryStore.get(roomId);
+    const versions = (entry?.versions || []).map((v, idx) => ({ index: idx, createdAt: v.createdAt, size: v.content.length }));
+    return res.json({ versions });
+  } catch (e) {
+    return res.status(500).json({ error: 'Failed to load history' });
+  }
+});
+
+app.post('/api/history/:roomId/restore', async (req, res) => {
+  const { roomId } = req.params;
+  const { index } = req.body || {};
+  try {
+    let content = '';
+    if (dbConnected) {
+      const doc = await Document.findOne({ roomId });
+      if (!doc || !doc.versions?.[index]) return res.status(404).json({ error: 'Version not found' });
+      content = doc.versions[index].content;
+      doc.content = content;
+      doc.versions = [...doc.versions, { content }].slice(-20);
+      await doc.save();
+    } else {
+      const entry = memoryStore.get(roomId);
+      if (!entry || !entry.versions?.[index]) return res.status(404).json({ error: 'Version not found' });
+      content = entry.versions[index].content;
+      entry.content = content;
+      entry.versions = [...entry.versions, { content, createdAt: new Date() }].slice(-20);
+      memoryStore.set(roomId, entry);
+    }
+    io.to(roomId).emit('load-document', content || '');
+    return res.json({ ok: true });
+  } catch (e) {
+    return res.status(500).json({ error: 'Failed to restore version' });
+  }
+});
+
 io.on('connection', (socket) => {
   console.log('👤 User connected:', socket.id);
 
