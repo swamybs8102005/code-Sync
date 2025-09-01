@@ -5,6 +5,7 @@ import { copyText } from "../utils/clipboard";
 
 import Chat from "./Chat";
 import VersionHistory from "./VersionHistory";
+import LocalFiles from "./LocalFiles";
 
 const Sidebar = ({ userData, onLeave }) => {
   const { connected, users } = useEditor();
@@ -12,6 +13,7 @@ const Sidebar = ({ userData, onLeave }) => {
   const [showUsers, setShowUsers] = useState(false);
   const [showChat, setShowChat] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
+  const [showLocal, setShowLocal] = useState(false);
   const connectedUsers = useMemo(() => {
     const me = userData?.username;
     return (users || []).filter((u) => (me ? u !== me : true));
@@ -118,8 +120,27 @@ const Sidebar = ({ userData, onLeave }) => {
         )}
       </div>
 
-      {/* Chat */}
+      {/* Local Files */}
       <div className="px-4">
+        <button
+          onClick={() => setShowLocal((s) => !s)}
+          className="w-full flex items-center justify-between bg-slate-700/60 hover:bg-slate-700 transition p-3 rounded-md text-left cursor-pointer"
+        >
+          <div className="flex items-center gap-2">
+            <FolderOpen size={18} className="text-yellow-400" />
+            <span className="text-white font-semibold">Local Files</span>
+          </div>
+          {showLocal ? <ChevronDown size={18} className="text-gray-300" /> : <ChevronRight size={18} className="text-gray-300" />}
+        </button>
+        {showLocal && (
+          <div className="mt-3">
+            <LocalFiles />
+          </div>
+        )}
+      </div>
+
+      {/* Chat */}
+      <div className="px-4 mt-3">
         <button
           onClick={() => setShowChat((s) => !s)}
           className="w-full flex items-center justify-between bg-slate-700/60 hover:bg-slate-700 transition p-3 rounded-md text-left cursor-pointer"
