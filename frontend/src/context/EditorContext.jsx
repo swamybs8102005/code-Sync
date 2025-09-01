@@ -109,11 +109,13 @@ export const EditorProvider = ({ children }) => {
 
   const [messages, setMessages] = useState([]);
   useEffect(() => {
-    if (!socketRef.current) return;
+    const s = socketRef.current;
+    if (!s) return;
     const handler = (msg) => setMessages((m) => [...m, msg]);
-    socketRef.current.on('chat-message', handler);
-    return () => socketRef.current?.off('chat-message', handler);
-  }, []);
+    s.off('chat-message', handler);
+    s.on('chat-message', handler);
+    return () => s.off('chat-message', handler);
+  }, [connected]);
 
   const sendChat = (roomId, username, message) => {
     if (socketRef.current && connected && message) {
