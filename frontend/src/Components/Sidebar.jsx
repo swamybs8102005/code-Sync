@@ -8,13 +8,17 @@ const Sidebar = ({ userData, onLeave }) => {
   const [copied, setCopied] = useState(false);
 
   const handleCopyRoomId = async () => {
-    try {
-      await navigator.clipboard.writeText(userData?.roomId || "default");
+    const toCopy = userData?.roomId || "default";
+    const ok = await copyText(toCopy);
+    if (ok) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
-      console.error("Failed to copy room ID:", err);
+      return;
     }
+    try {
+      // final fallback: show prompt so user can copy manually
+      window.prompt("Copy room ID", toCopy);
+    } catch (_) {}
   };
 
   const handleLeave = () => {
