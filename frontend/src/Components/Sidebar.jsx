@@ -4,8 +4,13 @@ import { useEditor } from "../context/EditorContext";
 import { copyText } from "../utils/clipboard";
 
 const Sidebar = ({ userData, onLeave }) => {
-  const { connected, users: connectedUsers } = useEditor();
+  const { connected, users } = useEditor();
   const [copied, setCopied] = useState(false);
+  const [showUsers, setShowUsers] = useState(false);
+  const connectedUsers = useMemo(() => {
+    const me = userData?.username;
+    return (users || []).filter((u) => (me ? u !== me : true));
+  }, [users, userData?.username]);
 
   const handleCopyRoomId = async () => {
     const toCopy = userData?.roomId || "default";
@@ -55,41 +60,55 @@ const Sidebar = ({ userData, onLeave }) => {
 
       {/* Connected Users */}
       <div className="flex-1 p-4 overflow-y-auto">
-        <div className="flex items-center gap-2 mb-4">
-          <Users size={20} className="text-blue-400" />
-          <h2 className="text-white text-lg font-semibold">Connected Users</h2>
-          <span className="bg-blue-600 text-white text-xs px-2 py-1 rounded-full">
-            {connectedUsers.length + 1}
-          </span>
-        </div>
-
-        {/* Current User */}
-        <div className="flex items-center gap-3 p-3 rounded-lg bg-blue-600/20 border border-blue-500/30 mb-2">
-          <div className="w-8 h-8 flex items-center justify-center rounded-full text-white font-bold bg-blue-600">
-            {userData?.username?.[0]?.toUpperCase() || "U"}
+        <button
+          onClick={() => setShowUsers((s) => !s)}
+          className="w-full flex items-center justify-between bg-slate-700/60 hover:bg-slate-700 transition p-3 rounded-md text-left cursor-pointer"
+        >
+          <div className="flex items-center gap-2">
+            <Users size={20} className="text-blue-400" />
+            <h2 className="text-white text-lg font-semibold">Connected Users</h2>
+            <span className="bg-blue-600 text-white text-xs px-2 py-1 rounded-full">
+              {connectedUsers.length + 1}
+            </span>
           </div>
-          <span className="text-white flex-1">
-            {userData?.username || "User"}
-          </span>
-          <span className="text-blue-400 text-xs">(You)</span>
-        </div>
+          {showUsers ? (
+            <ChevronDown size={18} className="text-gray-300" />
+          ) : (
+            <ChevronRight size={18} className="text-gray-300" />
+          )}
+        </button>
 
-        {/* Other Users */}
-        {connectedUsers.length > 0 ? (
-          connectedUsers.map((user, idx) => (
-            <div
-              key={idx}
-              className="flex items-center gap-3 p-3 rounded-lg bg-slate-700 hover:bg-slate-600 transition"
-            >
-              <div className="w-8 h-8 flex items-center justify-center rounded-full text-white font-bold bg-slate-600">
-                {user[0]?.toUpperCase() || "U"}
+        {showUsers && (
+          <div className="mt-3">
+            {/* Current User */}
+            <div className="flex items-center gap-3 p-3 rounded-lg bg-blue-600/20 border border-blue-500/30 mb-2">
+              <div className="w-8 h-8 flex items-center justify-center rounded-full text-white font-bold bg-blue-600">
+                {userData?.username?.[0]?.toUpperCase() || "U"}
               </div>
-              <span className="text-white flex-1">{user}</span>
+              <span className="text-white flex-1">
+                {userData?.username || "User"}
+              </span>
+              <span className="text-blue-400 text-xs">(You)</span>
             </div>
-          ))
-        ) : (
-          <div className="text-center py-6 text-gray-400 text-sm">
-            No other users connected
+
+            {/* Other Users */}
+            {connectedUsers.length > 0 ? (
+              connectedUsers.map((user, idx) => (
+                <div
+                  key={idx}
+                  className="flex items-center gap-3 p-3 rounded-lg bg-slate-700 hover:bg-slate-600 transition"
+                >
+                  <div className="w-8 h-8 flex items-center justify-center rounded-full text-white font-bold bg-slate-600">
+                    {user[0]?.toUpperCase() || "U"}
+                  </div>
+                  <span className="text-white flex-1">{user}</span>
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-6 text-gray-400 text-sm">
+                No other users connected
+              </div>
+            )}
           </div>
         )}
       </div>
