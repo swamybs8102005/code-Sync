@@ -11,8 +11,8 @@ const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
     origin: '*',
-    methods: ['GET', 'POST']
-  }
+    methods: ['GET', 'POST'],
+  },
 });
 
 app.use(cors());
@@ -24,20 +24,64 @@ app.get('/health', (_req, res) => {
 });
 
 const DEFAULT_MONGO_URI = 'mongodb://localhost:27017/realtime-editor';
+let dbConnected = false;
 
-// MongoDB connection
-mongoose.connect(process.env.MONGO_URI || DEFAULT_MONGO_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-}).then(() => {
-  console.log('✅ MongoDB connected successfully');
-}).catch((err) => {
-  console.error('❌ MongoDB connection error:', err);
-});
+// Try to connect to MongoDB, continue gracefully if not available
+mongoose
+  .connect(process.env.MONGO_URI || DEFAULT_MONGO_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(() => {
+    dbConnected = true;
+    console.log('✅ MongoDB connected successfully');
+  })
+  .catch((err) => {
+    dbConnected = false;
+    console.error('⚠️ MongoDB not available, using in-memory storage. Error:', err?.message || err);
+  });
+
+// In-memory storage fallback
+const memoryStore = new Map(); // roomId -> { content, createdAt, updatedAt }
+
+async function loadDocument(roomId) {
+  if (dbConnected) {
+    let doc = await Document.findOne({ roomId });
+    if (!doc) {
+      doc = await Document.create({
+        roomId,
+        content: `// Welcome to room: ${roomId}\n// Start coding together!`,
+      });
+    }
+    return doc.content;
+  }
+  // Fallback
+  if (!memoryStore.has(roomId)) {
+    memoryStore.set(roomId, {
+      content: `// Welcome to room: ${roomId}\n// Start coding together!`,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+  }
+  return memoryStore.get(roomId).content;
+}
+
+async function saveDocument(roomId, content) {
+  if (dbConnected) {
+    await Document.findOneAndUpdate(
+      { roomId },
+      { content },
+      { new: true, upsert: true }
+    );
+    return;
+  }
+  // Fallback
+  const existing = memoryStore.get(roomId) || { createdAt: new Date() };
+  memoryStore.set(roomId, { ...existing, content, updatedAt: new Date() });
+}
 
 // Track users per room
 const roomUsers = new Map();
-
 const DEFAULT_ROOM_ID = 'default';
 
 io.on('connection', (socket) => {
@@ -60,27 +104,22 @@ io.on('connection', (socket) => {
       // Join new room
       socket.join(roomId);
       socket.roomId = roomId;
-      
+
       if (!roomUsers.has(roomId)) {
         roomUsers.set(roomId, new Set());
       }
       roomUsers.get(roomId).add(socket.id);
 
-      // Load or create document
-      let document = await Document.findOne({ roomId });
-      if (!document) {
-        document = await Document.create({ 
-          roomId, 
-          content: `// Welcome to room: ${roomId}\n// Start coding together!` 
-        });
-        console.log('📄 Created new document for room:', roomId);
-      }
+      // Load or create document (DB or in-memory)
+      const content = await loadDocument(roomId);
 
       // Send document content and user count
-      socket.emit('load-document', document.content);
+      socket.emit('load-document', content || '');
       io.to(roomId).emit('user-count', roomUsers.get(roomId).size);
-      
-      console.log(`👥 User ${socket.id} joined room: ${roomId} (${roomUsers.get(roomId).size} users)`);
+
+      console.log(
+        `👥 User ${socket.id} joined room: ${roomId} (${roomUsers.get(roomId).size} users)`
+      );
     } catch (error) {
       console.error('❌ Error joining room:', error);
       socket.emit('error', 'Failed to load document');
@@ -97,11 +136,7 @@ io.on('connection', (socket) => {
   socket.on('save-document', async ({ roomId = DEFAULT_ROOM_ID, content }) => {
     try {
       if (socket.roomId === roomId) {
-        await Document.findOneAndUpdate(
-          { roomId },
-          { content },
-          { new: true, upsert: true }
-        );
+        await saveDocument(roomId, content);
         console.log(`💾 Document saved for room: ${roomId}`);
       }
     } catch (error) {
@@ -112,7 +147,7 @@ io.on('connection', (socket) => {
 
   socket.on('disconnect', () => {
     console.log('👋 User disconnected:', socket.id);
-    
+
     if (socket.roomId) {
       const room = roomUsers.get(socket.roomId);
       if (room) {
