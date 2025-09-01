@@ -31,8 +31,9 @@ const LocalFiles = () => {
       if (window.showDirectoryPicker) {
         try {
           const dirHandle = await window.showDirectoryPicker()
-          const children = await buildTreeFromDirectoryHandle(dirHandle)
-          setTree({ name: dirHandle.name, path: dirHandle.name, kind: 'directory', handle: dirHandle, children })
+        const children = await buildTreeFromDirectoryHandle(dirHandle)
+        setTree({ name: dirHandle.name, path: dirHandle.name, kind: 'directory', handle: dirHandle, children })
+        setExpanded({ [dirHandle.name]: true })
           return
         } catch (err) {
           // Blocked by permissions policy or user canceled - fallback to input
@@ -69,6 +70,7 @@ const LocalFiles = () => {
       }
     }
     setTree(root)
+    setExpanded({ [root.name]: true })
   }
 
   const loadFile = async (node) => {
