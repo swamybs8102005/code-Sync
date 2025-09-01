@@ -10,6 +10,7 @@ const MonacoEditor = ({ userData }) => {
   const [lastSaved, setLastSaved] = useState(null);
   const [isRunning, setIsRunning] = useState(false);
   const [runResult, setRunResult] = useState({ stdout: '', stderr: '', compile_output: '', status: null, time: null, memory: null });
+  const [programInput, setProgramInput] = useState('');
 
   const {
     currentContent,
@@ -67,7 +68,7 @@ const MonacoEditor = ({ userData }) => {
       const res = await fetch(`/api/execute`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ language, code: currentContent, stdin: '' }),
+        body: JSON.stringify({ language, code: currentContent, stdin: programInput }),
       });
       const data = await res.json();
       setRunResult(data);
@@ -128,6 +129,18 @@ const MonacoEditor = ({ userData }) => {
             Saved: {lastSaved ? lastSaved.toLocaleTimeString() : "Never"}
           </div>
         </div>
+      </div>
+
+      {/* Program Input */}
+      <div className="bg-slate-900 border-b border-slate-700 p-3">
+        <label className="block text-xs text-gray-400 mb-2">Program Input (stdin)</label>
+        <textarea
+          rows={2}
+          className="w-full bg-slate-800 border border-slate-700 rounded-md text-white text-sm p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="Provide input lines here..."
+          value={programInput}
+          onChange={(e) => setProgramInput(e.target.value)}
+        />
       </div>
 
       {/* Editor */}
