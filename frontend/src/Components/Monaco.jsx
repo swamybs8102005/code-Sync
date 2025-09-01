@@ -58,13 +58,13 @@ const MonacoEditor = ({ userData }) => {
     editor.focus();
   };
 
-  const API_URL = import.meta.env.VITE_API_URL || import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000';
+  const API_URL = '';
 
   const runCode = async () => {
     setIsRunning(true);
     setRunResult({ stdout: '', stderr: '', compile_output: '', status: null, time: null, memory: null });
     try {
-      const res = await fetch(`${API_URL}/api/execute`, {
+      const res = await fetch(`/api/execute`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ language, code: currentContent, stdin: '' }),
