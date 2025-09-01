@@ -23,9 +23,11 @@ const Chat = ({ userData }) => {
 
   return (
     <div className="flex flex-col h-60 bg-slate-800 border border-slate-700 rounded-md overflow-hidden">
-      <div ref={listRef} className="flex-1 overflow-auto p-3 space-y-2">
+      <div ref={listRef} className="flex-1 overflow-auto p-3 space-y-1.5">
         {messages.map((m, i) => {
           const isMe = m.username === username;
+          const bubble = `max-w-[80%] px-3 py-2 text-sm shadow rounded-2xl ${isMe ? 'bg-blue-600 text-white rounded-br-md mr-2' : 'bg-slate-700 text-gray-100 rounded-bl-md ml-2'}`;
+          const timeCls = `text-[10px] mt-1 ${isMe ? 'text-blue-200/80 text-right' : 'text-gray-400'}`;
           return (
             <div key={i} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
               {!isMe && (
@@ -33,10 +35,10 @@ const Chat = ({ userData }) => {
                   {m.username?.[0]?.toUpperCase() || 'U'}
                 </div>
               )}
-              <div className={`max-w-[75%] rounded-2xl px-3 py-2 text-sm shadow ${isMe ? 'bg-blue-600 text-white rounded-br-sm' : 'bg-slate-700 text-gray-100 rounded-bl-sm'}`}>
+              <div className={bubble}>
                 {!isMe && <div className="text-xs text-blue-300 font-semibold mb-0.5">{m.username}</div>}
                 <div className="whitespace-pre-wrap break-words">{m.message}</div>
-                <div className={`text-[10px] mt-1 ${isMe ? 'text-blue-200/80' : 'text-gray-400'}`}>{new Date(m.timestamp || Date.now()).toLocaleTimeString()}</div>
+                <div className={timeCls}>{new Date(m.timestamp || Date.now()).toLocaleTimeString()}</div>
               </div>
             </div>
           );
