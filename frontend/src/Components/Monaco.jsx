@@ -170,10 +170,16 @@ const MonacoEditor = ({ userData }) => {
         </div>
 
         <div className="flex items-center gap-3">
+          {externalFilePath && (
+            <span className="text-xs text-gray-400 truncate max-w-[220px]" title={externalFilePath}>{externalFilePath}</span>
+          )}
           <label className="flex items-center gap-1 text-xs text-gray-300">
             <input type="checkbox" className="accent-blue-600" checked={formatOnSave} onChange={(e) => setFormatOnSave(e.target.checked)} />
             Format on save
           </label>
+          {externalFilePath && (
+            <button onClick={() => saveToDisk(currentContent)} className="px-3 py-1 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white text-sm cursor-pointer">Save to Disk</button>
+          )}
           <button
             onClick={runCode}
             disabled={isRunning}
