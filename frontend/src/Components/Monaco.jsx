@@ -3,7 +3,7 @@ import Editor from "@monaco-editor/react";
 import { useEditor } from "../context/EditorContext";
 import { computeDelta } from "../utils/collaboration";
 
-const MonacoEditor = ({ userData }) => {
+const MonacoEditor = ({ userData, onToggleSidebar }) => {
   const [language, setLanguage] = useState("javascript");
   const [theme, setTheme] = useState("vs-dark");
   const [fontSize, setFontSize] = useState(14);
