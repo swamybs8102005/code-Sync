@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Copy, LogOut, Users, Wifi, WifiOff } from "lucide-react";
 import { useEditor } from "../context/EditorContext";
+import { copyText } from "../utils/clipboard";
 
 const Sidebar = ({ userData, onLeave }) => {
   const { connected, users: connectedUsers } = useEditor();
