@@ -160,6 +160,20 @@ const MonacoEditor = ({ userData }) => {
           }}
         />
       </div>
+
+      {/* Output Panel */}
+      <div className="bg-slate-900 border-t border-slate-700 p-3 text-sm text-gray-200 min-h-[120px] max-h-56 overflow-auto">
+        {runResult?.status?.description && (
+          <div className="mb-2 text-xs text-gray-400">Status: {runResult.status.description} {runResult.time ? `(time: ${runResult.time}s)` : ''}</div>
+        )}
+        {runResult.compile_output ? (
+          <pre className="text-red-400 whitespace-pre-wrap">{runResult.compile_output}</pre>
+        ) : runResult.stderr ? (
+          <pre className="text-red-400 whitespace-pre-wrap">{runResult.stderr}</pre>
+        ) : (
+          <pre className="text-green-300 whitespace-pre-wrap">{runResult.stdout}</pre>
+        )}
+      </div>
     </div>
   );
 };
