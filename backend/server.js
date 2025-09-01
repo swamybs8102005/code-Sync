@@ -82,7 +82,7 @@ mongoose
   });
 
 // In-memory storage fallback
-const memoryStore = new Map(); // roomId -> { content, createdAt, updatedAt }
+const memoryStore = new Map(); // roomId -> { content, versions: [{content, createdAt}], createdAt, updatedAt }
 
 async function loadDocument(roomId) {
   if (dbConnected) {
