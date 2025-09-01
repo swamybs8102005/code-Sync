@@ -19,6 +19,8 @@ const MonacoEditor = ({ userData }) => {
     updateContent,
     debouncedSave,
     connected,
+    sendCursor,
+    subscribeToRemoteCursor,
   } = useEditor();
 
   const editorRef = useRef(null);
