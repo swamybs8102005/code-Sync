@@ -10,10 +10,7 @@ import LocalFiles from "./LocalFiles";
 const Sidebar = ({ userData, onLeave, onCollapse }) => {
   const { connected, users } = useEditor();
   const [copied, setCopied] = useState(false);
-  const [showUsers, setShowUsers] = useState(false);
-  const [showChat, setShowChat] = useState(false);
-  const [showHistory, setShowHistory] = useState(false);
-  const [showLocal, setShowLocal] = useState(false);
+  const [activePanel, setActivePanel] = useState(null);
   const connectedUsers = useMemo(() => {
     const me = userData?.username;
     return (users || []).filter((u) => (me ? u !== me : true));
