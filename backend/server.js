@@ -16,11 +16,51 @@ const io = new Server(server, {
 });
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '1mb' }));
 
 // Health check
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// Code execution via Judge0 CE
+const DEFAULT_JUDGE0_URL = process.env.JUDGE0_URL || 'https://ce.judge0.com';
+const LANGUAGE_MAP = {
+  javascript: 63, // Node.js
+  typescript: 74, // TypeScript
+  python: 71, // Python 3
+  java: 62, // Java
+  cpp: 54, // C++ (GCC)
+};
+
+app.post('/api/execute', async (req, res) => {
+  try {
+    const { language = 'javascript', code = '', stdin = '' } = req.body || {};
+    const language_id = LANGUAGE_MAP[language];
+    if (!language_id) {
+      return res.status(400).json({ error: 'Unsupported language', language });
+    }
+
+    const submitUrl = `${DEFAULT_JUDGE0_URL}/submissions?base64_encoded=false&wait=true`;
+    const submission = {
+      source_code: code,
+      language_id,
+      stdin,
+    };
+
+    const r = await fetch(submitUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(submission),
+    });
+
+    const data = await r.json();
+    const { stdout, stderr, compile_output, time, memory, status } = data || {};
+    res.json({ stdout, stderr, compile_output, time, memory, status });
+  } catch (err) {
+    console.error('❌ Code execution error:', err);
+    res.status(500).json({ error: 'Execution failed' });
+  }
 });
 
 const DEFAULT_MONGO_URI = 'mongodb://localhost:27017/realtime-editor';
