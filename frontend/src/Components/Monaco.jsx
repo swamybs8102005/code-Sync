@@ -136,6 +136,7 @@ const MonacoEditor = ({ userData, onToggleSidebar }) => {
       {/* Top Bar */}
       <div className="bg-slate-800 border-b border-slate-700 p-3 flex items-center justify-between">
         <div className="flex items-center gap-4">
+          <button onClick={onToggleSidebar} className="px-2 py-1 text-xs bg-slate-700 hover:bg-slate-600 text-white rounded cursor-pointer">Panels</button>
           {/* Language Picker */}
           <div className="flex items-center gap-2">
             <span className="text-gray-300 text-sm">Language:</span>
