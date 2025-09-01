@@ -95,6 +95,32 @@ export const EditorProvider = ({ children }) => {
     }, 1000)
   }
 
+  const subscribeToRemoteCursor = (handler) => {
+    if (!socketRef.current) return () => {};
+    socketRef.current.on('cursor-update', handler);
+    return () => socketRef.current?.off('cursor-update', handler);
+  };
+
+  const sendCursor = (roomId, offset) => {
+    if (socketRef.current && connected) {
+      socketRef.current.emit('cursor-update', { roomId, offset });
+    }
+  };
+
+  const [messages, setMessages] = useState([]);
+  useEffect(() => {
+    if (!socketRef.current) return;
+    const handler = (msg) => setMessages((m) => [...m, msg]);
+    socketRef.current.on('chat-message', handler);
+    return () => socketRef.current?.off('chat-message', handler);
+  }, []);
+
+  const sendChat = (roomId, username, message) => {
+    if (socketRef.current && connected && message) {
+      socketRef.current.emit('chat-message', { roomId, username, message, timestamp: new Date().toISOString() });
+    }
+  };
+
   const value = {
     connected,
     users,
@@ -104,7 +130,13 @@ export const EditorProvider = ({ children }) => {
     sendChanges,
     saveDocument,
     updateContent,
-    debouncedSave
+    debouncedSave,
+    // presence
+    subscribeToRemoteCursor,
+    sendCursor,
+    // chat
+    messages,
+    sendChat,
   }
 
   return (
