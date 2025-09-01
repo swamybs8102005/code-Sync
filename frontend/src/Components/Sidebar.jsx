@@ -45,8 +45,10 @@ const Sidebar = ({ userData, onLeave, onCollapse }) => {
       <div className="p-4 border-b border-slate-700">
         <div className="flex items-center justify-between mb-2">
           <div className="text-white font-semibold">Room</div>
-          {typeof onLeave === 'function' && (
-            <button onClick={() => (window.togglePanels?.() || null)} className="text-xs text-gray-300 hover:text-white hidden"></button>
+          {onCollapse && (
+            <button onClick={onCollapse} className="text-gray-300 hover:text-white cursor-pointer" title="Hide panels">
+              <ChevronsLeft size={18} />
+            </button>
           )}
         </div>
         <div className="bg-slate-700 p-3 rounded-lg">
