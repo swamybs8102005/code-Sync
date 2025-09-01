@@ -22,7 +22,7 @@ const Chat = ({ userData }) => {
   };
 
   return (
-    <div className="flex flex-col h-60 bg-slate-800 border border-slate-700 rounded-md overflow-hidden">
+    <div className="flex flex-col h-60 bg-slate-800 rounded-md overflow-hidden">
       <div ref={listRef} className="flex-1 overflow-auto px-4 py-3 space-y-2">
         {messages.map((m, i) => {
           const isMe = m.username === username;
@@ -44,7 +44,7 @@ const Chat = ({ userData }) => {
           );
         })}
       </div>
-      <form onSubmit={onSend} className="flex p-2 gap-2 border-t border-slate-700">
+      <form onSubmit={onSend} className="flex p-2 gap-2">
         <input
           className="flex-1 bg-slate-700 text-white rounded-full px-4 py-2 text-sm border border-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
           placeholder="Message"
