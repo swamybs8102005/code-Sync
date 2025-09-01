@@ -48,6 +48,16 @@ const MonacoEditor = ({ userData }) => {
       const newValue = value || "";
       updateContent(newValue);
 
+      if (formatOnSave && editorRef.current && !isFormattingRef.current && (language === 'javascript' || language === 'typescript' || language === 'json')) {
+        isFormattingRef.current = true;
+        editorRef.current
+          .getAction('editor.action.formatDocument')
+          .run()
+          .finally(() => {
+            isFormattingRef.current = false;
+          });
+      }
+
       const delta = computeDelta(currentContent, newValue);
       if (delta && connected && userData?.roomId) {
         sendChanges(userData.roomId, delta);
