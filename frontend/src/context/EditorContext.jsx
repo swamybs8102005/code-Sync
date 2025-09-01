@@ -18,6 +18,7 @@ export const EditorProvider = ({ children }) => {
   const [users, setUsers] = useState([])
   const [currentContent, setCurrentContent] = useState('')
   const [isLoading, setIsLoading] = useState(true)
+  const [username, setUsername] = useState('')
   const socketRef = useRef(null)
   const saveTimeoutRef = useRef(null)
 
