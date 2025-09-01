@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
-import UserJoin from './components/UserJoin'
-import Sidebar from './components/Sidebar'
-import MonacoEditor from './components/Monaco'
+import UserJoin from './Components/UserJoin'
+import Sidebar from './Components/Sidebar'
+import MonacoEditor from './Components/Monaco'
 import { EditorProvider, useEditor } from './context/EditorContext'
 
 function AppContent() {
