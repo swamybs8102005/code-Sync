@@ -7,7 +7,7 @@ import Chat from "./Chat";
 import VersionHistory from "./VersionHistory";
 import LocalFiles from "./LocalFiles";
 
-const Sidebar = ({ userData, onLeave }) => {
+const Sidebar = ({ userData, onLeave, onCollapse }) => {
   const { connected, users } = useEditor();
   const [copied, setCopied] = useState(false);
   const [showUsers, setShowUsers] = useState(false);
