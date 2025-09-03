@@ -53,7 +53,7 @@ const MonacoEditor = ({ userData, onToggleSidebar }) => {
   const handleEditorChange = useCallback(
     (value) => {
       const newValue = value || "";
-      
+
       // Skip if this is a remote change
       if (isRemoteChangeRef.current) {
         isRemoteChangeRef.current = false;
@@ -86,7 +86,7 @@ const MonacoEditor = ({ userData, onToggleSidebar }) => {
         sendChanges(userData.roomId, delta);
         debouncedSave(userData.roomId, newValue);
         setLastSaved(new Date());
-        
+
         // Reset sync status after a short delay
         setTimeout(() => setSyncStatus("synced"), 500);
         setTimeout(() => setSyncStatus("idle"), 2000);
@@ -107,7 +107,7 @@ const MonacoEditor = ({ userData, onToggleSidebar }) => {
         const pos = editor.getPosition();
         const offset = model.getOffsetAt(pos);
         if (userData?.roomId) sendCursor(userData.roomId, offset);
-      } catch (_) {}
+      } catch (_) { }
     });
 
     const unsubscribe = subscribeToRemoteCursor(({ username, offset }) => {
@@ -128,7 +128,7 @@ const MonacoEditor = ({ userData, onToggleSidebar }) => {
           },
         ]);
         remoteDecorationsRef.current[id] = newDecos;
-      } catch (_) {}
+      } catch (_) { }
     });
 
     return () => {
@@ -189,18 +189,18 @@ const MonacoEditor = ({ userData, onToggleSidebar }) => {
   };
 
   return (
-    <div className="flex-1 h-full flex flex-col bg-slate-900">
+    <div className="flex-1  w-full min-h-0 flex flex-col bg-slate-900">
       {/* Top Bar */}
-      <div className="bg-slate-800/90 backdrop-blur-xl border-b border-slate-700/50 p-4 flex items-center justify-between shadow-2xl shadow-slate-900/50">
+      <div className=" bg-slate-800/90 backdrop-blur-xl border-b border-slate-700/50 p-4 flex items-center justify-between shadow-2xl shadow-slate-900/50">
         <div className="flex items-center gap-6">
-          <button 
-            onClick={onToggleSidebar} 
+          <button
+            onClick={onToggleSidebar}
             className="px-3 py-2 text-sm bg-slate-700/80 hover:bg-slate-600 text-white rounded-xl cursor-pointer transition-all duration-300 shadow-md hover:shadow-lg hover:shadow-slate-600/25 flex items-center gap-2 btn-hover glass-dark"
           >
             <span className="text-xs">☰</span>
             Panels
           </button>
-          
+
           {/* Language Picker */}
           <div className="flex items-center gap-3">
             <span className="text-gray-300 text-sm font-medium">Language:</span>
@@ -237,18 +237,17 @@ const MonacoEditor = ({ userData, onToggleSidebar }) => {
         <div className="flex items-center gap-4">
           {/* Sync Status */}
           <div className="flex items-center gap-3 px-4 py-2 bg-slate-700/50 rounded-xl border border-slate-600/50 glass-dark">
-            <div className={`w-3 h-3 rounded-full ${
-              syncStatus === 'idle' ? 'bg-gray-400' : 
-              syncStatus === 'syncing' ? 'bg-yellow-400 animate-pulse-glow' : 
-              'bg-green-400 animate-pulse-glow'
-            }`}></div>
+            <div className={`w-3 h-3 rounded-full ${syncStatus === 'idle' ? 'bg-gray-400' :
+                syncStatus === 'syncing' ? 'bg-yellow-400 animate-pulse-glow' :
+                  'bg-green-400 animate-pulse-glow'
+              }`}></div>
             <span className="text-sm text-gray-300 font-medium">
-              {syncStatus === 'idle' ? 'Ready' : 
-               syncStatus === 'syncing' ? 'Syncing...' : 
-               'Synced'}
+              {syncStatus === 'idle' ? 'Ready' :
+                syncStatus === 'syncing' ? 'Syncing...' :
+                  'Synced'}
             </span>
           </div>
-          
+
           {/* Shared Folder Indicator */}
           {sharedFolder && (
             <div className="flex items-center gap-3 px-4 py-2 bg-blue-600/20 border border-blue-500/40 rounded-xl text-sm text-blue-300 glass-dark animate-scale-in">
@@ -256,7 +255,7 @@ const MonacoEditor = ({ userData, onToggleSidebar }) => {
               <span className="font-medium">Shared by {sharedFolder.openedBy}</span>
             </div>
           )}
-          
+
           {/* External File Path */}
           {externalFilePath && (
             <div className="flex items-center gap-2 px-3 py-2 bg-slate-700/50 rounded-xl border border-slate-600/50 glass-dark">
@@ -265,32 +264,32 @@ const MonacoEditor = ({ userData, onToggleSidebar }) => {
               </span>
             </div>
           )}
-          
+
           {/* Format on Save Toggle */}
           <label className="flex items-center gap-2 text-sm text-gray-300 bg-slate-700/50 px-3 py-2 rounded-xl border border-slate-600/50 glass-dark">
-            <input 
-              type="checkbox" 
-              className="accent-blue-600 w-4 h-4" 
-              checked={formatOnSave} 
-              onChange={(e) => setFormatOnSave(e.target.checked)} 
+            <input
+              type="checkbox"
+              className="accent-blue-600 w-4 h-4"
+              checked={formatOnSave}
+              onChange={(e) => setFormatOnSave(e.target.checked)}
             />
             Format on save
           </label>
-          
+
           {/* Save to Disk Button */}
           {externalFilePath && (
-            <button 
-              onClick={() => saveToDisk(currentContent)} 
+            <button
+              onClick={() => saveToDisk(currentContent)}
               className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm cursor-pointer transition-all duration-300 shadow-md hover:shadow-lg hover:shadow-emerald-600/25 flex items-center gap-2 btn-hover"
             >
               💾 Save to Disk
             </button>
           )}
-          
+
           {/* Last Saved Time */}
-          <div className="text-sm text-gray-400 bg-slate-700/50 px-3 py-2 rounded-xl border border-slate-600/50 glass-dark">
+          <div className=" text-sm text-gray-400 bg-slate-700/50 p-2 rounded-xl border border-slate-600/50 glass-dark">
             <div className="text-xs text-gray-500 mb-1">Last Saved</div>
-            <div className="font-mono">
+            <div className="font-mono text-xs ">
               {lastSaved ? lastSaved.toLocaleTimeString() : "Never"}
             </div>
           </div>
@@ -307,9 +306,8 @@ const MonacoEditor = ({ userData, onToggleSidebar }) => {
             return (
               <div
                 key={t.path}
-                className={`group flex items-center min-w-[140px] max-w-[240px] px-3 cursor-pointer select-none border-r border-slate-800 h-full ${
-                  isActive ? "bg-slate-800 text-white" : "bg-slate-900 text-slate-300 hover:bg-slate-800/70"
-                }`}
+                className={`group flex items-center min-w-[140px] max-w-[240px] px-3 cursor-pointer select-none border-r border-slate-800 h-full ${isActive ? "bg-slate-800 text-white" : "bg-slate-900 text-slate-300 hover:bg-slate-800/70"
+                  }`}
                 onClick={() => activateTab(t.path)}
                 title={t.path}
               >
@@ -334,8 +332,8 @@ const MonacoEditor = ({ userData, onToggleSidebar }) => {
       </div>
 
       {/* Editor */}
-      <div className="flex-1 p-2">
-        <div className="h-full rounded-xl overflow-hidden border border-slate-700/50 bg-slate-900 shadow-2xl shadow-slate-900/50 card-hover">
+      <div className="flex-1 w-full flex flex-col bg-slate-900 min-h-0 overflow-hidden">
+        <div className="min-h-0 flex-1  rounded-xl   border border-slate-700/50 bg-slate-900 shadow-2xl shadow-slate-900/50 card-hover">
           <Editor
             height="100%"
             width="100%"
@@ -354,8 +352,8 @@ const MonacoEditor = ({ userData, onToggleSidebar }) => {
               fontFamily: "JetBrains Mono, Fira Code, Consolas, monospace",
               lineHeight: Math.round(fontSize * 1.5),
               padding: { top: 20, bottom: 20 },
-              scrollbar: { 
-                vertical: "visible", 
+              scrollbar: {
+                vertical: "visible",
                 horizontal: "visible",
                 verticalScrollbarSize: 12,
                 horizontalScrollbarSize: 12,
@@ -382,6 +380,7 @@ const MonacoEditor = ({ userData, onToggleSidebar }) => {
           />
         </div>
       </div>
+
     </div>
   );
 };
