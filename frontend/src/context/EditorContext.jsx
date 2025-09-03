@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react'
 import { io } from 'socket.io-client'
+import { validateDelta, applyDelta } from '../utils/collaboration'
 
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || ''
 
@@ -19,10 +20,14 @@ export const EditorProvider = ({ children }) => {
   const [currentContent, setCurrentContent] = useState('')
   const [isLoading, setIsLoading] = useState(true)
   const [username, setUsername] = useState('')
+  const [roomId, setRoomId] = useState('')
   const [externalFileHandle, setExternalFileHandle] = useState(null)
   const [externalFilePath, setExternalFilePath] = useState('')
+  const [sharedFolder, setSharedFolder] = useState(null)
+  const [roomOwner, setRoomOwner] = useState(null)
   const socketRef = useRef(null)
   const saveTimeoutRef = useRef(null)
+  const lastChangeRef = useRef(null)
 
   useEffect(() => {
     const socket = io(SOCKET_URL, { path: '/socket.io' })
@@ -41,6 +46,7 @@ export const EditorProvider = ({ children }) => {
     if (socketRef.current && roomId) {
       setIsLoading(true)
       setUsername(username || '')
+      setRoomId(roomId)
 
       const s = socketRef.current
       // prevent duplicate listeners and register before join
@@ -48,17 +54,27 @@ export const EditorProvider = ({ children }) => {
       s.off('receive-changes')
       s.off('user-count')
       s.off('users')
+      s.off('shared-folder')
+      s.off('room-owner')
+      s.off('file-request')
+      s.off('file-content')
 
       s.on('load-document', (initial) => {
         setCurrentContent(initial || '')
         setIsLoading(false)
+        lastChangeRef.current = initial || ''
       })
 
       s.on('receive-changes', (delta) => {
+        if (!validateDelta(delta)) {
+          console.warn('Invalid delta received:', delta)
+          return
+        }
+        
         setCurrentContent((prev) => {
-          const start = prev.slice(0, delta.start)
-          const end = prev.slice(delta.end)
-          return start + delta.text + end
+          const newContent = applyDelta(prev, delta)
+          lastChangeRef.current = newContent
+          return newContent
         })
       })
 
@@ -68,13 +84,41 @@ export const EditorProvider = ({ children }) => {
         setUsers(Array.isArray(list) ? list : [])
       })
 
+      s.on('shared-folder', (folderData) => {
+        setSharedFolder(folderData)
+        console.log('📁 Shared folder received:', folderData)
+      })
+
+      s.on('room-owner', (ownerInfo) => {
+        setRoomOwner(ownerInfo || null)
+        console.log('⭐ Room owner updated:', ownerInfo)
+      })
+
+      // Non-owner receives file content
+      s.on('file-content', ({ path, content, error }) => {
+        if (error) {
+          console.error('❌ File load error:', error)
+          return
+        }
+        if (typeof content === 'string') {
+          setCurrentContent(content)
+          lastChangeRef.current = content
+        }
+      })
+
       s.emit('join', { roomId, username })
     }
   }
 
   const sendChanges = (roomId, delta) => {
-    if (socketRef.current && connected) {
+    if (socketRef.current && connected && validateDelta(delta)) {
       socketRef.current.emit('send-changes', { roomId, delta })
+    }
+  }
+
+  const shareFolder = (roomId, folderTree, folderPath) => {
+    if (socketRef.current && connected && folderTree) {
+      socketRef.current.emit('share-folder', { roomId, folderTree, folderPath })
     }
   }
 
@@ -144,11 +188,35 @@ export const EditorProvider = ({ children }) => {
     }
   }
 
+  // Owner: register a handler to read files locally and respond over socket
+  const registerFileRequestHandler = (getFileByPath) => {
+    const s = socketRef.current
+    if (!s) return () => {}
+    const handler = async ({ requesterId, path }) => {
+      try {
+        const content = await getFileByPath(path)
+        s.emit('file-content', { roomId, requesterId, path, content })
+      } catch (e) {
+        s.emit('file-content', { roomId, requesterId, path, error: String(e?.message || e) })
+      }
+    }
+    s.on('file-request', handler)
+    return () => s.off('file-request', handler)
+  }
+
+  // Non-owner: request a file by path from the owner
+  const requestFile = (path) => {
+    if (socketRef.current && connected && typeof path === 'string') {
+      socketRef.current.emit('request-file', { roomId, path })
+    }
+  }
+
   const value = {
     connected,
     users,
     currentContent,
     isLoading,
+    roomId,
     joinRoom,
     sendChanges,
     saveDocument,
@@ -166,6 +234,13 @@ export const EditorProvider = ({ children }) => {
     externalFilePath,
     setExternalFile,
     saveToDisk,
+    // shared folder
+    sharedFolder,
+    shareFolder,
+    roomOwner,
+    isOwner: !!roomOwner && socketRef.current?.id === roomOwner.socketId,
+    registerFileRequestHandler,
+    requestFile,
   }
 
   return (

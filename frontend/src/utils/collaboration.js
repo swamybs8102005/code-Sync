@@ -7,6 +7,14 @@
 export function computeDelta(prev, next) {
   if (prev === next) return null;
   
+  // Handle edge cases
+  if (!prev && next) {
+    return { start: 0, end: 0, text: next };
+  }
+  if (prev && !next) {
+    return { start: 0, end: prev.length, text: '' };
+  }
+  
   let start = 0;
   while (start < prev.length && start < next.length && prev[start] === next[start]) {
     start++;
@@ -36,9 +44,25 @@ export function computeDelta(prev, next) {
  * @returns {string} Updated content
  */
 export function applyDelta(content, delta) {
+  if (!content || !delta) return content;
+  
   const start = content.slice(0, delta.start);
   const end = content.slice(delta.end);
   return start + delta.text + end;
+}
+
+/**
+ * Validate delta object
+ * @param {Object} delta - Delta object to validate
+ * @returns {boolean} Whether the delta is valid
+ */
+export function validateDelta(delta) {
+  return delta && 
+         typeof delta.start === 'number' && 
+         typeof delta.end === 'number' && 
+         typeof delta.text === 'string' &&
+         delta.start >= 0 && 
+         delta.end >= delta.start;
 }
 
 /**

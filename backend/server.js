@@ -127,6 +127,11 @@ async function saveDocument(roomId, content) {
 
 // Track users per room: roomId -> Map<socketId, username>
 const roomUsers = new Map();
+// Track shared folders per room: roomId -> { tree, openedBy, openedAt }
+const roomFolders = new Map();
+// Track room owners: roomId -> { socketId, username }
+const roomOwners = new Map();
+
 function getUsernames(roomId) {
   const map = roomUsers.get(roomId);
   if (!map) return [];
@@ -218,6 +223,19 @@ io.on('connection', (socket) => {
       io.to(roomId).emit('user-count', currentMap.size);
       io.to(roomId).emit('users', getUsernames(roomId));
 
+      // Assign owner if none
+      if (!roomOwners.has(roomId)) {
+        roomOwners.set(roomId, { socketId: socket.id, username });
+      }
+      const ownerInfo = roomOwners.get(roomId);
+      io.to(roomId).emit('room-owner', { username: ownerInfo.username, socketId: ownerInfo.socketId });
+
+      // Send shared folder info if available
+      const sharedFolder = roomFolders.get(roomId);
+      if (sharedFolder) {
+        socket.emit('shared-folder', sharedFolder);
+      }
+
       console.log(`👥 User ${socket.id} (${username}) joined room: ${roomId} (${currentMap.size} users)`);
     } catch (error) {
       console.error('❌ Error joining room:', error);
@@ -227,29 +245,76 @@ io.on('connection', (socket) => {
 
   socket.on('send-changes', ({ roomId = DEFAULT_ROOM_ID, delta }) => {
     if (socket.roomId === roomId) {
-      socket.to(roomId).emit('receive-changes', delta);
-      console.log(`📝 Changes sent in room ${roomId} by ${socket.id}`);
+      // Validate delta before broadcasting
+      if (delta && typeof delta.start === 'number' && typeof delta.end === 'number' && typeof delta.text === 'string') {
+        socket.to(roomId).emit('receive-changes', delta);
+        console.log(`📝 Changes sent in room ${roomId} by ${socket.username || socket.id}: ${delta.text.length} chars at position ${delta.start}-${delta.end}`);
+      } else {
+        console.warn(`⚠️ Invalid delta received from ${socket.username || socket.id} in room ${roomId}:`, delta);
+      }
+    }
+  });
+
+  socket.on('share-folder', ({ roomId = DEFAULT_ROOM_ID, folderTree, folderPath }) => {
+    if (socket.roomId === roomId && folderTree) {
+      const owner = roomOwners.get(roomId);
+      if (!owner || owner.socketId !== socket.id) {
+        // Only owner can share the folder
+        socket.emit('error', 'Only the room owner can share folders');
+        return;
+      }
+      const sharedFolder = {
+        tree: folderTree,
+        path: folderPath,
+        openedBy: socket.username || socket.id,
+        openedAt: new Date().toISOString()
+      };
+      
+      roomFolders.set(roomId, sharedFolder);
+      
+      // Broadcast to all users in the room
+      io.to(roomId).emit('shared-folder', sharedFolder);
+      
+      console.log(`📁 Folder shared in room ${roomId} by ${socket.username || socket.id}: ${folderPath}`);
     }
   });
 
   socket.on('cursor-update', ({ roomId = DEFAULT_ROOM_ID, offset }) => {
-    if (socket.roomId === roomId) {
+    if (socket.roomId === roomId && typeof offset === 'number' && offset >= 0) {
       socket.to(roomId).emit('cursor-update', { username: socket.username, offset });
     }
   });
 
   socket.on('chat-message', ({ roomId = DEFAULT_ROOM_ID, message, username, timestamp }) => {
-    if (socket.roomId === roomId) {
+    if (socket.roomId === roomId && message && typeof message === 'string') {
       const payload = { message, username: username || socket.username, timestamp: timestamp || new Date().toISOString() };
       io.to(roomId).emit('chat-message', payload);
     }
   });
 
+  // Relay file requests from non-owners to the current owner
+  socket.on('request-file', ({ roomId = DEFAULT_ROOM_ID, path }) => {
+    if (socket.roomId === roomId && typeof path === 'string') {
+      const owner = roomOwners.get(roomId);
+      if (owner?.socketId) {
+        io.to(owner.socketId).emit('file-request', { requesterId: socket.id, path });
+      }
+    }
+  });
+
+  // Owner responds with file content to a specific requester
+  socket.on('file-content', ({ roomId = DEFAULT_ROOM_ID, requesterId, path, content, error }) => {
+    const owner = roomOwners.get(roomId);
+    if (socket.roomId === roomId && owner?.socketId === socket.id && requesterId) {
+      io.to(requesterId).emit('file-content', { path, content, error: error || null });
+    }
+  });
+
   socket.on('save-document', async ({ roomId = DEFAULT_ROOM_ID, content }) => {
     try {
-      if (socket.roomId === roomId) {
+      if (socket.roomId === roomId && content && typeof content === 'string') {
         await saveDocument(roomId, content);
-        console.log(`💾 Document saved for room: ${roomId}`);
+        console.log(`💾 Document saved for room: ${roomId} by ${socket.username || socket.id}`);
       }
     } catch (error) {
       console.error('❌ Error saving document:', error);
@@ -266,9 +331,23 @@ io.on('connection', (socket) => {
         room.delete(socket.id);
         if (room.size === 0) {
           roomUsers.delete(socket.roomId);
+          // Clean up shared folder when room is empty
+          roomFolders.delete(socket.roomId);
+          roomOwners.delete(socket.roomId);
           console.log(`🏚️ Room ${socket.roomId} is now empty`);
         } else {
           roomUsers.set(socket.roomId, room);
+          // Reassign owner if necessary
+          const currentOwner = roomOwners.get(socket.roomId);
+          if (!currentOwner || currentOwner.socketId === socket.id) {
+            const [newSocketId, newUsername] = room.entries().next().value || [];
+            if (newSocketId) {
+              roomOwners.set(socket.roomId, { socketId: newSocketId, username: newUsername });
+              io.to(socket.roomId).emit('room-owner', { username: newUsername, socketId: newSocketId });
+            } else {
+              roomOwners.delete(socket.roomId);
+            }
+          }
           io.to(socket.roomId).emit('user-count', room.size);
           io.to(socket.roomId).emit('users', getUsernames(socket.roomId));
           console.log(`👥 Room ${socket.roomId} now has ${room.size} users`);

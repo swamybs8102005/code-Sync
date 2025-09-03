@@ -1,7 +1,6 @@
 import React, { useState } from 'react'
 import UserJoin from './Components/UserJoin'
-import Sidebar from './Components/Sidebar'
-import MonacoEditor from './Components/Monaco'
+import WorkspaceShell from './Components/WorkspaceShell'
 import { EditorProvider, useEditor } from './context/EditorContext'
 
 function AppContent() {
@@ -26,10 +25,7 @@ function AppContent() {
       {!isUserJoined ? (
         <UserJoin onJoin={handleUserJoin} />
       ) : (
-        <div className="h-screen w-screen flex flex-row bg-slate-900 overflow-hidden ">
-          {showSidebar && <Sidebar userData={userData} onLeave={handleUserLeave} onCollapse={() => setShowSidebar(false)} />}
-          <MonacoEditor userData={userData} onToggleSidebar={() => setShowSidebar((s) => !s)} />
-        </div>
+        <WorkspaceShell userData={userData} onLeave={handleUserLeave} />
       )}
     </>
   )
