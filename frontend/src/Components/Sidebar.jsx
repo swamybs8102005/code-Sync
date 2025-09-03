@@ -48,7 +48,7 @@ const Sidebar = ({ userData, onLeave, onCollapse }) => {
   return (
     <div className="h-full flex flex-row bg-slate-900 border-r border-slate-800">
       {/* Activity bar (VS Code style) */}
-      <div className="w-14 h-full flex flex-col items-center justify-between bg-slate-950 border-r border-slate-800 py-4">
+      <div className="w-14 h-full flex flex-col items-center justify-between bg-slate-950 border-r border-slate-800 p-4">
         <div className="flex flex-col items-center gap-2">
           {/* Toggle/collapse button at the top */}
           <button
@@ -58,8 +58,8 @@ const Sidebar = ({ userData, onLeave, onCollapse }) => {
           >
             <Menu size={18} />
           </button>
-          <div className="h-2" />
-          <button onClick={() => setActivePanel('explorer')} className={`w-10 h-10 rounded-md cursor-pointer flex items-center justify-center ${activePanel==='explorer' ? 'bg-slate-800 text-white' : 'text-slate-300 hover:bg-slate-800/70'}`} title="Explorer"><FolderOpen size={18} /></button>
+          <div className="h-2 w-auto" />
+          <button onClick={() => setActivePanel('explorer')} className={`w-10 h-10 rounded-md  cursor-pointer flex items-center justify-center ${activePanel==='explorer' ? 'bg-slate-800 text-white' : 'text-slate-300 hover:bg-slate-800/70'}`} title="Explorer"><FolderOpen size={18} /></button>
           <button onClick={() => setActivePanel('users')} className={`w-10 h-10 rounded-md cursor-pointer flex items-center justify-center ${activePanel==='users' ? 'bg-slate-800 text-white' : 'text-slate-300 hover:bg-slate-800/70'}`} title="Users"><Users size={18} /></button>
           <button onClick={() => setActivePanel('chat')} className={`w-10 h-10 rounded-md cursor-pointer flex items-center justify-center ${activePanel==='chat' ? 'bg-slate-800 text-white' : 'text-slate-300 hover:bg-slate-800/70'}`} title="Chat"><MessageSquare size={18} /></button>
           <button onClick={() => setActivePanel('history')} className={`w-10 h-10 rounded-md cursor-pointer flex items-center justify-center ${activePanel==='history' ? 'bg-slate-800 text-white' : 'text-slate-300 hover:bg-slate-800/70'}`} title="History"><HistoryIcon size={18} /></button>
@@ -69,7 +69,7 @@ const Sidebar = ({ userData, onLeave, onCollapse }) => {
       </div>
 
       {/* Side panel */}
-      <div className="w-88 h-full flex flex-col bg-slate-900">
+      <div className=" flex flex-col bg-slate-900">
         {/* Panel header */}
         <div className="h-12 flex items-center justify-between px-4 bg-slate-900 border-b border-slate-800">
           <div className="text-sm font-semibold text-slate-200">

@@ -198,28 +198,28 @@ const LocalFiles = () => {
   const displayExpanded = sharedFolder && !isOwner ? { [sharedFolder.tree.name]: true } : expanded
 
   return (
-    <div className="bg-slate-800/90 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-6 text-sm shadow-2xl shadow-slate-900/50 card-hover glass-dark">
+    <div className="bg-slate-800/90 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-3  text-sm shadow-2xl shadow-slate-900/50 card-hover glass-dark">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4 text-white font-semibold">
-          <div className="p-3 bg-yellow-500/20 rounded-2xl border border-yellow-500/30">
-            <FolderOpen size={24} className="text-yellow-400" />
+          <div className="p-2 bg-yellow-500/20 rounded-2xl border border-yellow-500/30">
+            <FolderOpen size={18} className="text-yellow-400" />
           </div>
           <div>
-            <div className="text-xl">{sharedFolder ? 'Shared Files' : 'Local Files'}</div>
+            <div className="text-md">{sharedFolder ? 'Shared Files' : 'Local Files'}</div>
             {sharedFolder && (
-              <div className="flex items-center gap-2 text-sm text-gray-400 mt-1">
+              <div className="flex items-center gap-1 text-sm text-gray-400 mt-1">
                 <Users size={14} />
                 <span>Shared by {sharedFolder.openedBy}</span>
               </div>
             )}
           </div>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           {!sharedFolder && (
             <>
               <button 
                 onClick={openFolder} 
-                className={`px-5 py-3 rounded-xl text-sm cursor-pointer flex items-center gap-2 transition-all duration-300 shadow-lg btn-hover ${isOwner ? 'bg-blue-600 hover:bg-blue-700 text-white hover:shadow-xl hover:shadow-blue-600/25' : 'bg-slate-700 text-gray-300 cursor-not-allowed'}`}
+                className={`p-3 mx-1  rounded-xl text-sm cursor-pointer flex items-center transition-all duration-300 shadow-lg btn-hover ${isOwner ? 'bg-blue-600 hover:bg-blue-700 text-white hover:shadow-xl hover:shadow-blue-600/25' : 'bg-slate-700 text-gray-300 cursor-not-allowed'}`}
                 disabled={!isOwner}
               >
                 <FolderOpen size={16} /> Open Folder
